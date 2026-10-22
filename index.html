@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Us Two — Video & Games</title>
+  <meta name="description" content="Video call your partner and play 10 games together at the same time.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💞</text></svg>">
+</head>
+<body>
+  <!-- Lobby -->
+  <section id="lobby" class="lobby">
+    <div class="lobby-card">
+      <div class="logo">💞</div>
+      <h1>Us Two</h1>
+      <p class="tagline">Video call each other and play games at the same time.</p>
+
+      <label class="field">
+        <span>Your name</span>
+        <input id="name" maxlength="20" placeholder="e.g. Tifat" autocomplete="nickname">
+      </label>
+
+      <div id="lobby-create">
+        <button id="btn-create" class="btn primary big">Create a room</button>
+        <div class="or"><span>or join one</span></div>
+        <form id="join-form" class="join-row">
+          <input id="join-code" maxlength="6" placeholder="Room code" autocapitalize="characters" autocomplete="off">
+          <button class="btn">Join</button>
+        </form>
+      </div>
+
+      <div id="lobby-invited" hidden>
+        <p class="invited">You've been invited to room <b id="invited-code"></b> 💌</p>
+        <button id="btn-join-invite" class="btn primary big">Join the room</button>
+      </div>
+
+      <p id="lobby-status" class="status" role="status"></p>
+      <p class="fine">Allow camera & microphone when asked. Works best in Chrome, Safari or Edge.</p>
+    </div>
+  </section>
+
+  <!-- Room -->
+  <section id="room" class="room" hidden>
+    <header class="topbar">
+      <div class="brand">💞 Us Two</div>
+      <div class="room-info">
+        <span class="pill" id="conn-pill"><i class="dot"></i><span id="conn-text">Waiting…</span></span>
+        <button id="btn-copy" class="btn small ghost" title="Copy invite link">🔗 Invite <b id="room-code"></b></button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="call">
+        <div class="videos">
+          <div class="remote-wrap">
+            <video id="remote-video" autoplay playsinline></video>
+            <div id="remote-placeholder" class="placeholder">
+              <div class="big-emoji">💌</div>
+              <p id="waiting-text">Waiting for your partner…<br><small>Send them the invite link</small></p>
+            </div>
+            <span class="name-tag" id="remote-name"></span>
+          </div>
+          <div class="local-wrap">
+            <video id="local-video" autoplay playsinline muted></video>
+            <span class="name-tag">You</span>
+          </div>
+        </div>
+        <div class="controls">
+          <button id="btn-mic" class="ctrl" title="Mute / unmute">🎤</button>
+          <button id="btn-cam" class="ctrl" title="Camera on / off">📷</button>
+          <button id="btn-heart" class="ctrl" title="Send a heart">❤️</button>
+          <button id="btn-leave" class="ctrl danger" title="Leave">📞</button>
+        </div>
+        <div class="chat">
+          <div id="chat-log" class="chat-log" aria-live="polite"></div>
+          <form id="chat-form" class="chat-form">
+            <input id="chat-input" maxlength="200" placeholder="Say something sweet…" autocomplete="off">
+            <button class="btn small">Send</button>
+          </form>
+        </div>
+      </aside>
+
+      <section class="stage">
+        <div class="stage-head">
+          <button id="btn-back" class="btn small ghost" hidden>← All games</button>
+          <h2 id="stage-title">Pick a game</h2>
+        </div>
+        <div id="stage-body" class="stage-body"></div>
+      </section>
+    </main>
+    <div id="hearts" class="hearts" aria-hidden="true"></div>
+    <div id="toast" class="toast" role="status"></div>
+  </section>
+
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="games.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
