@@ -75,6 +75,11 @@
           <button id="btn-heart" class="ctrl" title="Send a heart">❤️</button>
           <button id="btn-leave" class="ctrl danger" title="Leave">📞</button>
         </div>
+        <div class="volume">
+          <button id="btn-speaker" class="vol-btn" title="Mute / unmute speaker" aria-label="Mute or unmute speaker">🔊</button>
+          <input id="vol" type="range" min="0" max="150" step="5" value="100" aria-label="Speaker volume">
+          <span id="vol-pct" class="vol-pct">100%</span>
+        </div>
         <div class="chat">
           <div id="chat-log" class="chat-log" aria-live="polite"></div>
           <form id="chat-form" class="chat-form">

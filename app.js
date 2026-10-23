@@ -52,16 +52,17 @@
   const lobbyStatus = (t) => { $("#lobby-status").textContent = t; };
   function setLobbyBusy(b) { document.querySelectorAll("#lobby button").forEach((x) => (x.disabled = b)); }
 
-  $("#btn-create").addEventListener("click", () => { const n = myName(); if (n) createRoom(n); });
+  $("#btn-create").addEventListener("click", () => { const n = myName(); if (n) { unlockAudio(); createRoom(n); } });
   $("#join-form").addEventListener("submit", (e) => {
     e.preventDefault();
     const code = $("#join-code").value.toUpperCase().replace(/[^A-Z0-9]/g, "");
     const n = myName();
     if (!n) return;
     if (code.length < 4) return lobbyStatus("Enter the room code your partner sent you");
+    unlockAudio();
     joinRoom(n, code);
   });
-  $("#btn-join-invite").addEventListener("click", () => { const n = myName(); if (n) joinRoom(n, invitedCode); });
+  $("#btn-join-invite").addEventListener("click", () => { const n = myName(); if (n) { unlockAudio(); joinRoom(n, invitedCode); } });
 
   async function getMedia() {
     lobbyStatus("Asking for camera & microphone…");
@@ -212,9 +213,66 @@
     const v = $("#remote-video");
     v.srcObject = stream;
     $("#remote-placeholder").hidden = !!stream;
+    routeAudio(stream);
     if (stream) v.play().catch(() => toast("Tap anywhere to turn on sound 🔊"));
   }
-  document.addEventListener("click", () => { const v = $("#remote-video"); if (v.srcObject && v.paused) v.play().catch(() => {}); });
+  document.addEventListener("click", () => {
+    const v = $("#remote-video");
+    if (v.srcObject && v.paused) v.play().catch(() => {});
+    if (audio.ctx && audio.ctx.state !== "running") audio.ctx.resume().catch(() => {});
+  });
+
+  // ---------- speaker volume ----------
+  // iPhone Safari ignores <video>.volume, so the partner's audio goes through a Web Audio gain node.
+  // The video element stays attached (muted) because Chrome won't play a remote WebRTC stream through Web Audio otherwise.
+  const audio = { ctx: null, gain: null, src: null, vol: 1, lastVol: 1 };
+  try { const v = parseFloat(localStorage.getItem("ustwo-vol")); if (v >= 0 && v <= 1.5) audio.vol = v; } catch (e) { /* storage blocked */ }
+  function unlockAudio() {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (audio.ctx || !AC) return;
+    try {
+      audio.ctx = new AC();
+      audio.gain = audio.ctx.createGain();
+      audio.gain.gain.value = audio.vol;
+      audio.gain.connect(audio.ctx.destination);
+      audio.ctx.resume().catch(() => {});
+    } catch (e) { audio.ctx = null; }
+  }
+  function routeAudio(stream) {
+    const v = $("#remote-video");
+    if (audio.src) { try { audio.src.disconnect(); } catch (e) { /* already gone */ } audio.src = null; }
+    if (stream && stream.getAudioTracks().length && audio.ctx) {
+      try {
+        audio.src = audio.ctx.createMediaStreamSource(stream);
+        audio.src.connect(audio.gain);
+        v.muted = true;
+        if (audio.ctx.state !== "running") audio.ctx.resume().catch(() => {});
+        return;
+      } catch (e) { audio.src = null; }
+    }
+    v.muted = false; // fallback: plain element volume (works everywhere except iPhone)
+    applyVolume();
+  }
+  function applyVolume() {
+    if (audio.gain) audio.gain.gain.value = audio.vol;
+    $("#remote-video").volume = Math.min(1, audio.vol);
+    const pct = Math.round(audio.vol * 100);
+    $("#vol").value = pct;
+    $("#vol-pct").textContent = pct + "%";
+    $("#btn-speaker").textContent = pct === 0 ? "🔇" : pct < 50 ? "🔈" : pct <= 100 ? "🔉" : "🔊";
+    $("#btn-speaker").classList.toggle("off", pct === 0);
+    try { localStorage.setItem("ustwo-vol", String(audio.vol)); } catch (e) { /* ignore */ }
+  }
+  $("#vol").addEventListener("input", (e) => {
+    audio.vol = e.target.value / 100;
+    if (audio.vol > 0) audio.lastVol = audio.vol;
+    applyVolume();
+  });
+  $("#btn-speaker").addEventListener("click", () => {
+    if (audio.vol > 0) { audio.lastVol = audio.vol; audio.vol = 0; } else audio.vol = audio.lastVol || 1;
+    applyVolume();
+  });
+  applyVolume();
 
   // ---------- room UI ----------
   function enterRoom() {
