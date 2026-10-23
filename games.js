@@ -654,8 +654,417 @@
     },
   };
 
+  // ---------- 11. Battleship ----------
+  const BS = 8, SHIPS = [4, 3, 3, 2];
+  function randomFleet(rand) {
+    const taken = new Set(), fleet = [];
+    for (const len of SHIPS) {
+      for (;;) {
+        const horiz = rand() < 0.5;
+        const r = Math.floor(rand() * (horiz ? BS : BS - len + 1)), c = Math.floor(rand() * (horiz ? BS - len + 1 : BS));
+        const cells = range(len).map((k) => (horiz ? r * BS + c + k : (r + k) * BS + c));
+        if (cells.some((x) => taken.has(x))) continue;
+        cells.forEach((x) => taken.add(x));
+        fleet.push(cells);
+        break;
+      }
+    }
+    return fleet;
+  }
+  const sunk = (ship, shots) => ship.every((x) => shots.includes(x));
+  const battleship = {
+    id: "ships", name: "Battleship", icon: "🚢", tag: "Strategy", blurb: "Hide your fleet, then take turns firing. Sink all their ships!",
+    init: (rand) => ({ phase: "place", fleets: [randomFleet(rand), randomFleet(rand)], ready: [false, false], shots: [[], []], turn: 0, winner: null, score: [0, 0], round: 0 }),
+    apply(s, a, p, rand) {
+      if (a.k === "shuffle") {
+        if (s.phase !== "place" || s.ready[p]) return false;
+        s.fleets[p] = randomFleet(rand);
+      } else if (a.k === "ready") {
+        if (s.phase !== "place" || s.ready[p]) return false;
+        s.ready[p] = true;
+        if (s.ready[0] && s.ready[1]) s.phase = "play";
+      } else if (a.k === "fire") {
+        if (s.phase !== "play" || s.turn !== p || s.shots[p].includes(a.i) || a.i < 0 || a.i >= BS * BS) return false;
+        s.shots[p].push(a.i);
+        if (s.fleets[1 - p].every((ship) => sunk(ship, s.shots[p]))) { s.phase = "over"; s.winner = p; s.score[p]++; }
+        else s.turn = 1 - p;
+      } else if (a.k === "again") {
+        if (a.round !== s.round || s.phase !== "over") return false;
+        const score = s.score;
+        Object.assign(s, battleship.init(rand), { score, turn: (s.round + 1) % 2, round: s.round + 1 });
+      } else return false;
+    },
+    render(s, ctx) {
+      const me = ctx.me, them = 1 - me;
+      const mineShips = new Set(s.fleets[me].flat()), theirShips = new Set(s.fleets[them].flat());
+      const theirSunk = new Set(s.fleets[them].filter((sh) => sunk(sh, s.shots[me])).flat());
+      const sunkCount = (fleet, shots) => fleet.filter((sh) => sunk(sh, shots)).length;
+      const myGrid = `<div class="bs">${range(BS * BS).map((i) => {
+        const hit = s.shots[them].includes(i);
+        return `<div class="bs-cell ${mineShips.has(i) ? "ship" : ""} ${hit ? (mineShips.has(i) ? "hit" : "miss") : ""}">${hit ? (mineShips.has(i) ? "🔥" : "•") : ""}</div>`;
+      }).join("")}</div>`;
+      if (s.phase === "place") {
+        return `<div class="g">${scores(ctx, s.score)}
+          <p class="msg-line">${s.ready[me] ? `Ready! Waiting for ${nm(ctx, them)} to place their ships…` : "Here's your secret fleet. Shuffle until you like it, then tap Ready."}</p>
+          ${s.ready[them] && !s.ready[me] ? `<p class="muted" style="margin:0">${esc(ctx.names[them])} is ready ✓</p>` : ""}
+          <div class="board-col"><b>Your waters</b>${myGrid}</div>
+          ${s.ready[me] ? "" : `<div class="row"><button class="btn" ${A({ k: "shuffle" })}>🔀 Shuffle ships</button><button class="btn primary" ${A({ k: "ready" })}>✅ Ready</button></div>`}</div>`;
+      }
+      const enemy = `<div class="bs enemy">${range(BS * BS).map((i) => {
+        const shot = s.shots[me].includes(i), hit = shot && theirShips.has(i);
+        const reveal = s.phase === "over" && theirShips.has(i) && !shot;
+        return `<button ${A({ k: "fire", i })} class="bs-cell ${hit ? "hit" : shot ? "miss" : ""} ${theirSunk.has(i) ? "sunk" : ""} ${reveal ? "ship" : ""}"
+          ${shot || s.phase !== "play" || s.turn !== me ? "disabled" : ""} aria-label="fire">${hit ? "💥" : shot ? "•" : ""}</button>`;
+      }).join("")}</div>`;
+      const msg = s.phase === "over" ? `${who(ctx, s.winner)} sank the whole fleet! 🏆`
+        : s.turn === me ? "Your turn — tap a square on their waters to fire 🎯" : `${nm(ctx, them)} is aiming… 😬`;
+      return `<div class="g">${scores(ctx, s.score, s.phase === "play" ? s.turn : null)}
+        <p class="msg-line ${s.phase === "over" ? "win" : ""}">${msg}</p>
+        <div class="boards">
+          <div class="board-col"><b>Their waters · sunk ${sunkCount(s.fleets[them], s.shots[me])}/${SHIPS.length}</b>${enemy}</div>
+          <div class="board-col"><span class="muted">Your waters · lost ${sunkCount(s.fleets[me], s.shots[them])}/${SHIPS.length}</span>${myGrid.replace('class="bs"', 'class="bs mine"')}</div>
+        </div>
+        ${s.phase === "over" ? `<button class="btn primary" ${A({ k: "again", round: s.round })}>New battle</button>` : ""}</div>`;
+    },
+  };
+
+  // ---------- 12. Dots & Boxes ----------
+  const DB = 4; // boxes per side
+  const H_EDGES = (DB + 1) * DB; // horizontal edges come first, then vertical
+  const boxEdges = (r, c) => [r * DB + c, (r + 1) * DB + c, H_EDGES + r * (DB + 1) + c, H_EDGES + r * (DB + 1) + c + 1];
+  const dots = {
+    id: "dots", name: "Dots & Boxes", icon: "🟦", tag: "Strategy", blurb: "Draw lines; close a box to claim it and go again.",
+    init: () => ({ edges: Array(H_EDGES * 2).fill(null), boxes: Array(DB * DB).fill(null), turn: 0, score: [0, 0], wins: [0, 0], round: 0 }),
+    apply(s, a, p) {
+      if (a.k === "line") {
+        if (s.turn !== p || s.edges[a.e] !== null || a.e < 0 || a.e >= s.edges.length || !s.boxes.includes(null)) return false;
+        s.edges[a.e] = p;
+        let closed = 0;
+        for (let r = 0; r < DB; r++) for (let c = 0; c < DB; c++) {
+          const b = r * DB + c;
+          if (s.boxes[b] === null && boxEdges(r, c).every((e) => s.edges[e] !== null)) { s.boxes[b] = p; s.score[p]++; closed++; }
+        }
+        if (!closed) s.turn = 1 - p;
+        if (!s.boxes.includes(null) && s.score[0] !== s.score[1]) s.wins[s.score[0] > s.score[1] ? 0 : 1]++;
+      } else if (a.k === "again") {
+        if (a.round !== s.round || s.boxes.includes(null)) return false;
+        Object.assign(s, dots.init(), { wins: s.wins, turn: (s.round + 1) % 2, round: s.round + 1 });
+      } else return false;
+    },
+    render(s, ctx) {
+      const done = !s.boxes.includes(null);
+      const off = done || s.turn !== ctx.me;
+      const cells = [];
+      for (let R = 0; R <= DB * 2; R++) for (let C = 0; C <= DB * 2; C++) {
+        const r = R >> 1, c = C >> 1;
+        if (R % 2 === 0 && C % 2 === 0) cells.push(`<div class="dot"></div>`);
+        else if (R % 2 === 0 || C % 2 === 0) {
+          const e = R % 2 === 0 ? r * DB + c : H_EDGES + r * (DB + 1) + c;
+          const o = s.edges[e];
+          cells.push(`<button class="edge ${R % 2 === 0 ? "h" : "v"} ${o !== null ? "p" + o : ""}" ${A({ k: "line", e })} ${o !== null || off ? "disabled" : ""} aria-label="line"></button>`);
+        } else {
+          const o = s.boxes[r * DB + c];
+          cells.push(`<div class="box ${o !== null ? "p" + o : ""}">${o !== null ? esc(ctx.names[o].slice(0, 1).toUpperCase()) : ""}</div>`);
+        }
+      }
+      const [x, y] = s.score;
+      const msg = done ? (x === y ? "It's a tie! 🤝" : `${who(ctx, x > y ? 0 : 1)} claimed the most boxes! 🎉`)
+        : s.turn === ctx.me ? "Your turn — tap between two dots" : `${nm(ctx, s.turn)} is drawing a line…`;
+      return `<div class="g">${scores(ctx, s.score, done ? null : s.turn)}
+        <span class="badge">Games won — ${esc(ctx.names[0])}: ${s.wins[0]} · ${esc(ctx.names[1])}: ${s.wins[1]}</span>
+        <p class="msg-line ${done && x !== y ? "win" : ""}">${msg}</p>
+        <div class="dots">${cells.join("")}</div>
+        ${done ? `<button class="btn primary" ${A({ k: "again", round: s.round })}>Play again</button>` : ""}</div>`;
+    },
+  };
+
+  // ---------- 13. Word Duel (Wordle race) ----------
+  const WD_WORDS = ["HEART", "SMILE", "HAPPY", "DREAM", "SWEET", "HONEY", "CANDY", "BEACH", "OCEAN", "PIZZA", "MUSIC", "DANCE", "PARTY",
+    "SUNNY", "CLOUD", "STORM", "PLANT", "GRAPE", "LEMON", "MANGO", "PEACH", "APPLE", "BREAD", "TOAST", "CHAIR", "TABLE", "HOUSE", "PHONE",
+    "MOVIE", "NIGHT", "LIGHT", "WATER", "RIVER", "BRAVE", "CHARM", "TRUST", "FAITH", "SPARK", "FLAME", "QUIET", "PEACE", "LAUGH", "STORY",
+    "WORLD", "EARTH", "SPACE", "ROBOT", "TIGER", "ZEBRA", "HORSE", "MOUSE", "BUNNY", "PANDA", "KOALA", "SNAKE", "EAGLE", "TULIP", "DAISY",
+    "BLOOM", "FROST", "GHOST", "MAGIC", "CROWN", "JEWEL", "PEARL", "CORAL", "OLIVE", "SUGAR", "SPICE", "CREAM", "SALAD", "JUICE", "BERRY",
+    "MELON", "CHEST", "SHINE", "PLANE", "TRAIN", "CLOCK", "GLASS", "PAINT", "BRUSH", "SHIRT", "SHOES", "WATCH", "RADIO", "TOWEL", "PILOT"];
+  const WD_MAX = 6;
+  function wdMarks(guess, ans) {
+    const res = Array(5).fill("b"), left = {};
+    for (let i = 0; i < 5; i++) { if (guess[i] === ans[i]) res[i] = "g"; else left[ans[i]] = (left[ans[i]] || 0) + 1; }
+    for (let i = 0; i < 5; i++) if (res[i] !== "g" && left[guess[i]] > 0) { res[i] = "y"; left[guess[i]]--; }
+    return res;
+  }
+  const wdDone = (s, p) => s.guesses[p].includes(s.word) || s.guesses[p].length >= WD_MAX;
+  const wordDuel = {
+    id: "wordle", name: "Word Duel", icon: "🟩", tag: "Words", blurb: "Same secret 5-letter word for both. Fewest guesses wins!",
+    init: (rand) => ({ word: WD_WORDS[Math.floor(rand() * WD_WORDS.length)], guesses: [[], []], score: [0, 0], scored: false, round: 0 }),
+    apply(s, a, p, rand) {
+      if (a.k === "guess") {
+        const g = String(a.text || "").toUpperCase().replace(/[^A-Z]/g, "");
+        if (g.length !== 5 || wdDone(s, p)) return false;
+        s.guesses[p].push(g);
+        if (wdDone(s, 0) && wdDone(s, 1) && !s.scored) {
+          s.scored = true;
+          const n = [0, 1].map((q) => (s.guesses[q].includes(s.word) ? s.guesses[q].length : 99));
+          if (n[0] !== n[1]) s.score[n[0] < n[1] ? 0 : 1]++;
+        }
+      } else if (a.k === "next") {
+        if (a.round !== s.round || !s.scored) return false;
+        Object.assign(s, { word: WD_WORDS[Math.floor(rand() * WD_WORDS.length)], guesses: [[], []], scored: false, round: s.round + 1 });
+      } else return false;
+    },
+    render(s, ctx) {
+      const me = ctx.me, them = 1 - me;
+      const board = (p, mini) => `<div class="wd ${mini ? "mini" : ""}">${range(WD_MAX).map((r) => {
+        const g = s.guesses[p][r], m = g && wdMarks(g, s.word);
+        return `<div class="wd-row">${range(5).map((i) => `<div class="tile ${m ? m[i] : ""}">${g && !mini ? g[i] : ""}</div>`).join("")}</div>`;
+      }).join("")}</div>`;
+      const letters = {};
+      s.guesses[me].forEach((g) => wdMarks(g, s.word).forEach((m, i) => {
+        const rank = { g: 3, y: 2, b: 1 };
+        if (!letters[g[i]] || rank[m] > rank[letters[g[i]]]) letters[g[i]] = m;
+      }));
+      const kb = `<div class="wd-keys">${"QWERTYUIOPASDFGHJKLZXCVBNM".split("").map((l) => `<span class="${letters[l] || ""}">${l}</span>`).join("")}</div>`;
+      const solved = (p) => s.guesses[p].includes(s.word);
+      let msg;
+      if (s.scored) {
+        const n = [0, 1].map((q) => (solved(q) ? s.guesses[q].length : 99));
+        msg = `<p class="msg-line ${n[0] !== n[1] ? "win" : ""}">The word was <b>${s.word}</b> — ${n[0] === n[1] ? (n[0] === 99 ? "nobody got it 😅" : "it's a tie! 🤝") : `${who(ctx, n[0] < n[1] ? 0 : 1)} won with fewer guesses! 🎉`}</p>`;
+      } else if (wdDone(s, me)) msg = `<p class="msg-line">${solved(me) ? `Solved in ${s.guesses[me].length}! 🎉` : "Out of guesses 😬"} Waiting for ${nm(ctx, them)}…</p>`;
+      else msg = `<p class="msg-line">Guess the 5-letter word. 🟩 right spot · 🟨 wrong spot</p>`;
+      const input = !wdDone(s, me) ? `<form data-form="guess" class="form-row"><input name="text" id="wd-guess" maxlength="5" placeholder="5-letter word" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:.2em"><button class="btn primary">Guess</button></form>` : "";
+      return `<div class="g">${scores(ctx, s.score)}${msg}
+        <div class="boards"><div class="board-col"><b>You · ${s.guesses[me].length}/${WD_MAX}</b>${board(me)}</div>
+          <div class="board-col"><span class="muted">${esc(ctx.names[them])} · ${s.guesses[them].length}/${WD_MAX}</span>${board(them, true)}</div></div>
+        ${input}${s.guesses[me].length && !s.scored ? kb : ""}
+        ${s.scored ? `<button class="btn primary" ${A({ k: "next", round: s.round })}>Next word</button>` : ""}</div>`;
+    },
+  };
+
+  // ---------- 14. Reaction Race ----------
+  const reaction = {
+    id: "react", name: "Reaction Race", icon: "⚡", tag: "Quick", blurb: "Tap the moment it turns green. Fastest fingers win!",
+    init: () => ({ phase: "idle", delay: 0, times: [null, null], score: [0, 0], best: [null, null], round: 0 }),
+    apply(s, a, p, rand) {
+      if (a.k === "start") {
+        if (a.round !== s.round || (s.phase === "wait" && !a.force)) return false;
+        Object.assign(s, { phase: "wait", delay: 1500 + Math.floor(rand() * 3500), times: [null, null], round: s.round + 1 });
+      } else if (a.k === "tap") {
+        if (s.phase !== "wait" || a.round !== s.round || s.times[p] !== null) return false;
+        s.times[p] = Math.max(-1, Math.min(10000, Math.round(+a.ms || 0)));
+        if (s.times[p] > 0 && (s.best[p] === null || s.times[p] < s.best[p])) s.best[p] = s.times[p];
+        if (s.times[0] !== null && s.times[1] !== null) {
+          s.phase = "done";
+          const ok = s.times.map((t) => t > 0);
+          if (ok[0] && ok[1] && s.times[0] !== s.times[1]) s.score[s.times[0] < s.times[1] ? 0 : 1]++;
+          else if (ok[0] !== ok[1]) s.score[ok[0] ? 0 : 1]++;
+        }
+      } else return false;
+    },
+    render(s, ctx) {
+      const me = ctx.me, them = 1 - me;
+      const fmt = (t) => (t === null ? "—" : t < 0 ? "too early! 🙈" : t + " ms");
+      let pad, info = "";
+      if (s.phase === "idle") pad = `<button class="pad idle" ${A({ k: "start", round: s.round })}>Tap to start ⚡</button>`;
+      else if (s.phase === "wait") {
+        pad = `<button class="pad wait" data-react="${s.round}">Wait for green…</button>`;
+        info = `<p class="muted" style="margin:0">${s.times[them] !== null ? `${esc(ctx.names[them])} has tapped ✓` : "&nbsp;"}</p>
+          <button class="btn small ghost" ${A({ k: "start", round: s.round, force: true })}>↻ Restart round</button>`;
+      } else {
+        const [x, y] = s.times, ok = [x > 0, y > 0];
+        const w = ok[0] && ok[1] ? (x === y ? null : x < y ? 0 : 1) : ok[0] !== ok[1] ? (ok[0] ? 0 : 1) : null;
+        pad = `<button class="pad idle" ${A({ k: "start", round: s.round })}>Go again ⚡</button>`;
+        info = `<div class="answers"><div class="answer p0"><small>${esc(ctx.names[0])}</small>${fmt(x)}</div><div class="answer p1"><small>${esc(ctx.names[1])}</small>${fmt(y)}</div></div>
+          <p class="msg-line ${w !== null ? "win" : ""}">${w === null ? "No winner this time!" : `${who(ctx, w)} ${w === me ? "were" : "was"} faster! ⚡`}</p>`;
+      }
+      return {
+        top: `<div class="g">${scores(ctx, s.score)}<span class="badge">Best — ${esc(ctx.names[0])}: ${fmt(s.best[0])} · ${esc(ctx.names[1])}: ${fmt(s.best[1])}</span></div>`,
+        pad: `<div class="g" style="margin-top:12px">${pad}</div>`,
+        info: `<div class="g" style="margin-top:12px">${info}</div>`,
+      };
+    },
+    after(root, s, ctx) {
+      root._rx = { s, ctx };
+      const pad = root.querySelector("[data-react]");
+      if (s.phase === "wait" && root._rxRound !== s.round) {
+        // Each screen runs its own countdown, so network lag doesn't matter: only your own reaction time counts.
+        root._rxRound = s.round; root._rxGo = 0;
+        clearTimeout(root._rxTimer);
+        root._rxTimer = setTimeout(() => { root._rxGo = performance.now(); const p = root.querySelector("[data-react]"); if (p) { p.classList.add("go"); p.textContent = "TAP! 👆"; } }, s.delay);
+      }
+      if (pad && s.times[ctx.me] !== null) { pad.disabled = true; pad.textContent = s.times[ctx.me] < 0 ? "Too early! 🙈" : `${s.times[ctx.me]} ms — waiting…`; pad.classList.remove("go"); }
+      else if (pad && root._rxGo) { pad.classList.add("go"); pad.textContent = "TAP! 👆"; }
+      if (root._rxBound) return;
+      root._rxBound = true;
+      root.addEventListener("pointerdown", (e) => {
+        const p = e.target.closest("[data-react]");
+        if (!p || p.disabled) return;
+        e.preventDefault();
+        const { s: cur, ctx: c } = root._rx;
+        if (cur.phase !== "wait" || cur.times[c.me] !== null) return;
+        c.act({ k: "tap", round: cur.round, ms: root._rxGo ? performance.now() - root._rxGo : -1 });
+      });
+    },
+  };
+
+  // ---------- 15. Truth or Dare ----------
+  const TRUTHS = [
+    "What was your very first impression of me?", "What's a song that makes you think of me?", "When did you first realize you liked me?",
+    "What's the most embarrassing thing you've done to impress someone?", "What's one thing you've never told me?", "What's your favorite thing I do for you?",
+    "What's your biggest turn-off?", "What's a habit of mine you secretly find cute?", "If we could go anywhere tomorrow, where would you take me?",
+    "What's the last thing that made you blush?", "What's something you're insecure about?", "What's your most-used excuse to get out of plans?",
+    "What's your favorite photo of us and why?", "Who was your first crush?", "What's a dream you've never told anyone?",
+    "What's the silliest thing you've cried about?", "What do you think about right before you fall asleep?", "What's your favorite memory of us?",
+    "What's one thing you'd change about our first date?", "What's the weirdest thing you've googled lately?", "What's your secret guilty pleasure?",
+    "If you had to describe me in three words, what would they be?", "What's something you want us to try together?", "What's the biggest lie you've told your parents?",
+    "When was the last time you stalked someone's social media?", "What's one thing you love about yourself?", "What's your most irrational fear?",
+    "What did you dream about last night?", "What's a compliment you'll never forget?", "What's one thing you're proud of me for?",
+  ];
+  const DARES = [
+    "Sing the chorus of a love song to me right now 🎤", "Do your best impression of me", "Show me the last photo in your camera roll",
+    "Do 10 jumping jacks while saying something you love about me", "Talk in an accent for the next 3 minutes", "Blow me 5 different kinds of kisses 😘",
+    "Show me your best dance move for 15 seconds", "Make the funniest face you can and hold it for 10 seconds", "Read your last sent text out loud",
+    "Give me a 30-second pickup line performance", "Put on the silliest thing you can find nearby", "Tell me a joke — if I don't laugh, do another dare",
+    "Speak only in questions until your next turn", "Draw a portrait of me in 30 seconds and show it", "Serenade me with a made-up song about my name",
+    "Do your best runway walk across the room", "Show me the oldest photo of yourself on your phone", "Let me pick your profile picture for a day",
+    "Do a dramatic movie-scene confession of love", "Hold a plank for 30 seconds while telling me about your day", "Try to lick your elbow on camera",
+    "Send me a voice note saying something sweet right now", "Describe our future house in a dramatic narrator voice", "Do your best animal impression — I guess the animal",
+    "Balance something on your head for 20 seconds", "Rap 4 lines about how cute I am", "Show me what's in your fridge and rate it",
+    "Make a heart with your hands and hold it to the camera for 10 seconds", "Do a magic trick (or pretend really hard)", "Write my name with your nose in the air",
+  ];
+  const truthOrDare = {
+    id: "tod", name: "Truth or Dare", icon: "🔥", tag: "Couples", blurb: "Take turns choosing truth or dare. No chickening out 😏",
+    init: (rand) => ({ turn: 0, kind: null, card: null, t: shuffle(range(TRUTHS.length), rand), d: shuffle(range(DARES.length), rand), ti: 0, di: 0, n: 0, done: [0, 0] }),
+    apply(s, a, p) {
+      if (a.k === "pick") {
+        if (p !== s.turn || a.n !== s.n) return false;
+        if (a.kind === "truth") { s.card = s.t[s.ti % s.t.length]; s.ti++; }
+        else if (a.kind === "dare") { s.card = s.d[s.di % s.d.length]; s.di++; }
+        else return false;
+        s.kind = a.kind;
+      } else if (a.k === "done") {
+        if (a.n !== s.n || s.card === null) return false;
+        s.done[s.turn]++; s.turn = 1 - s.turn; s.card = null; s.kind = null; s.n++;
+      } else return false;
+    },
+    render(s, ctx) {
+      const mine = s.turn === ctx.me;
+      let body;
+      if (s.card === null) {
+        body = mine ? `<p class="msg-line">Your turn — truth or dare?</p>
+            <div class="row"><button class="choice" ${A({ k: "pick", kind: "truth", n: s.n })}>🤫 Truth</button><button class="choice" ${A({ k: "pick", kind: "dare", n: s.n })}>🔥 Dare</button></div>`
+          : `<p class="msg-line">${nm(ctx, s.turn)} is choosing truth or dare…</p>`;
+      } else {
+        const text = s.kind === "truth" ? TRUTHS[s.card] : DARES[s.card];
+        body = `<div class="tod-card ${s.kind}"><small>${s.kind === "truth" ? "🤫 TRUTH" : "🔥 DARE"} for ${mine ? "you" : esc(ctx.names[s.turn])}</small><p>${esc(text)}</p></div>
+          <div class="row"><button class="btn primary" ${A({ k: "done", n: s.n })}>✅ Done — ${mine ? `${esc(ctx.names[1 - ctx.me])}'s` : "your"} turn</button>
+          ${mine ? `<button class="btn ghost" ${A({ k: "pick", kind: s.kind, n: s.n })}>🔄 Different one</button>` : ""}</div>`;
+      }
+      return `<div class="g"><span class="badge">Completed — ${esc(ctx.names[0])}: ${s.done[0]} · ${esc(ctx.names[1])}: ${s.done[1]}</span>${body}</div>`;
+    },
+  };
+
+  // ---------- 16. Never Have I Ever ----------
+  const NHIE = [
+    "Never have I ever stalked an ex on social media", "Never have I ever fallen asleep during a movie date", "Never have I ever sung in the shower",
+    "Never have I ever lied about my age", "Never have I ever cried at a cartoon", "Never have I ever sent a text to the wrong person",
+    "Never have I ever eaten food off the floor", "Never have I ever pretended to like a gift", "Never have I ever had a crush on a teacher",
+    "Never have I ever been on a blind date", "Never have I ever forgotten someone's name right after meeting them", "Never have I ever ghosted someone",
+    "Never have I ever laughed so hard I snorted", "Never have I ever practiced a kiss on my hand", "Never have I ever re-gifted a present",
+    "Never have I ever cheated in a board game", "Never have I ever lied to get out of a date", "Never have I ever danced alone in my room",
+    "Never have I ever binge-watched a whole season in one day", "Never have I ever had a crush on a cartoon character", "Never have I ever been jealous of a friend's partner",
+    "Never have I ever written a love letter", "Never have I ever fallen in public", "Never have I ever said 'I love you' first",
+    "Never have I ever snooped through someone's phone", "Never have I ever gotten lost in my own city", "Never have I ever eaten a whole pizza by myself",
+    "Never have I ever been told I snore", "Never have I ever had a dream about you", "Never have I ever pretended to be sick to skip school or work",
+    "Never have I ever talked to myself in the mirror", "Never have I ever sent a risky text and regretted it", "Never have I ever kept a secret from my best friend",
+    "Never have I ever walked into a glass door", "Never have I ever cried at a wedding", "Never have I ever googled myself",
+  ];
+  const neverHave = {
+    id: "nhie", name: "Never Have I Ever", icon: "🙈", tag: "Couples", blurb: "Answer secretly, reveal together. Prepare for confessions!",
+    init: (rand) => ({ order: shuffle(range(NHIE.length), rand), i: 0, ans: [null, null], have: [0, 0] }),
+    apply(s, a, p) {
+      if (a.k === "answer") {
+        if (a.i !== s.i || s.ans[p] !== null) return false;
+        s.ans[p] = !!a.have;
+        if (a.have) s.have[p]++;
+      } else if (a.k === "next") {
+        if (a.i !== s.i) return false;
+        s.i = (s.i + 1) % s.order.length; s.ans = [null, null];
+      } else return false;
+    },
+    render(s, ctx) {
+      const both = !s.ans.includes(null), mine = s.ans[ctx.me], them = 1 - ctx.me;
+      let body;
+      if (both) {
+        body = `<div class="answers">${[0, 1].map((p) => `<div class="answer p${p}"><small>${esc(ctx.names[p])}</small>${s.ans[p] ? "🙋 I have!" : "🙅 Never"}</div>`).join("")}</div>
+          <p class="msg-line">${s.ans[0] && s.ans[1] ? "You've BOTH done it 😂 Tell the story!" : s.ans[0] || s.ans[1] ? `Ooh, ${nm(ctx, s.ans[0] ? 0 : 1)} has some explaining to do 👀` : "Innocent angels, both of you 😇"}</p>
+          <button class="btn primary" ${A({ k: "next", i: s.i })}>Next one</button>`;
+      } else {
+        body = mine === null
+          ? `<div class="row"><button class="choice" ${A({ k: "answer", i: s.i, have: true })}>🙋 I have</button><button class="choice" ${A({ k: "answer", i: s.i, have: false })}>🙅 Never</button></div>`
+          : `<p class="msg-line">Answer locked 🔒 Waiting for ${nm(ctx, them)}…</p>`;
+        if (mine === null && s.ans[them] !== null) body += `<p class="muted" style="margin:0">${esc(ctx.names[them])} has answered ✓</p>`;
+      }
+      return `<div class="g"><span class="badge">"I have" count — ${esc(ctx.names[0])}: ${s.have[0]} · ${esc(ctx.names[1])}: ${s.have[1]}</span>
+        <p class="big-q">${esc(NHIE[s.order[s.i]])}…</p>${body}</div>`;
+    },
+  };
+
+  // ---------- 17. Emoji Riddles ----------
+  const EMOJI = [
+    ["🦁👑", "the lion king", "Movie"], ["❄️👸", "frozen", "Movie"], ["🕷️🧑", "spiderman", "Movie"], ["🚢🧊💔", "titanic", "Movie"],
+    ["🧙‍♂️💍🌋", "lord of the rings", "Movie"], ["🐠🔍", "finding nemo", "Movie"], ["🦇🧑", "batman", "Movie"], ["👻🚫🔫", "ghostbusters", "Movie"],
+    ["🧸🤠🚀", "toy story", "Movie"], ["🏠⬆️🎈", "up", "Movie"], ["🧜‍♀️", "the little mermaid", "Movie"], ["🦖🏝️", "jurassic park", "Movie"],
+    ["👸🐸", "the princess and the frog", "Movie"], ["🍫🏭", "charlie and the chocolate factory", "Movie"], ["👽📞🏠", "et", "Movie"],
+    ["🐼🥋", "kung fu panda", "Movie"], ["⭐⚔️", "star wars", "Movie"], ["🧛‍♂️🌙💘", "twilight", "Movie"], ["🐝🎬", "bee movie", "Movie"],
+    ["💍💍💍💍⚰️", "four weddings and a funeral", "Movie"], ["🌧️☔🐱🐶", "raining cats and dogs", "Saying"], ["🍰🚶‍♂️", "piece of cake", "Saying"],
+    ["🧊🔨", "break the ice", "Saying"], ["🐘🏠", "elephant in the room", "Saying"], ["⏰💸", "time is money", "Saying"],
+    ["🍎👁️", "apple of my eye", "Saying"], ["❤️💔", "heartbreak", "Word"], ["🌙🍯", "honeymoon", "Word"], ["🦋🦋🤰", "butterflies in my stomach", "Saying"],
+    ["☀️🌻", "sunflower", "Word"], ["🔥🪰", "firefly", "Word"], ["⭐🐟", "starfish", "Word"], ["🌈🐟", "rainbow fish", "Word"],
+    ["🎂🎉", "birthday party", "Word"], ["🍿🎬", "movie night", "Word"], ["🏖️📚", "beach read", "Word"], ["💤🥱", "sleepy", "Word"],
+    ["🎤🎶👑", "karaoke king", "Word"], ["🥶🍦", "ice cream", "Word"], ["🍕❤️", "pizza lover", "Word"],
+  ];
+  const emojiRiddles = {
+    id: "emoji", name: "Emoji Riddles", icon: "🎬", tag: "Questions", blurb: "Guess the movie or phrase from emojis. Both can score!",
+    init: (rand) => ({ order: shuffle(range(EMOJI.length), rand), i: 0, solved: [false, false], tries: [0, 0], revealed: false, hint: false, score: [0, 0] }),
+    apply(s, a, p) {
+      if (a.k === "guess") {
+        if (+a.i !== s.i || s.solved[p] || s.revealed) return false;
+        const g = String(a.text || "").trim();
+        if (!g) return false;
+        s.tries[p]++;
+        if (norm(g).replace(/^the/, "") === norm(EMOJI[s.order[s.i]][1]).replace(/^the/, "")) { s.solved[p] = true; s.score[p]++; }
+      } else if (a.k === "hint") {
+        if (a.i !== s.i) return false;
+        s.hint = true;
+      } else if (a.k === "reveal") {
+        if (a.i !== s.i) return false;
+        s.revealed = true;
+      } else if (a.k === "next") {
+        if (a.i !== s.i) return false;
+        Object.assign(s, { i: (s.i + 1) % s.order.length, solved: [false, false], tries: [0, 0], revealed: false, hint: false });
+      } else return false;
+    },
+    render(s, ctx) {
+      const [em, ans, cat] = EMOJI[s.order[s.i]];
+      const me = ctx.me, them = 1 - me, over = s.revealed || (s.solved[0] && s.solved[1]);
+      const hint = `${cat} · ${ans.split(" ").length} word${ans.includes(" ") ? "s" : ""} · starts with “${ans[0].toUpperCase()}”`;
+      let body;
+      if (over) body = `<p class="msg-line ${s.solved.some(Boolean) ? "win" : ""}">It's <b>${esc(ans)}</b>! ${s.solved[0] && s.solved[1] ? "You both got it 💞" : ""}</p>
+          <button class="btn primary" ${A({ k: "next", i: s.i })}>Next riddle</button>`;
+      else {
+        body = s.solved[me] ? `<p class="msg-line win">You got it! 🎉 Waiting for ${nm(ctx, them)}…</p>`
+          : `<form data-form="guess" class="form-row"><input type="hidden" name="i" value="${s.i}"><input name="text" id="emoji-guess" maxlength="60" placeholder="Your guess…" autocomplete="off"><button class="btn primary">Guess</button></form>
+             ${s.tries[me] ? `<p class="muted" style="margin:0">Not quite — ${s.tries[me]} tr${s.tries[me] === 1 ? "y" : "ies"} so far</p>` : ""}`;
+        body += `<p class="muted" style="margin:0">${s.solved[them] ? `${esc(ctx.names[them])} solved it ✓` : s.tries[them] ? `${esc(ctx.names[them])} has tried ${s.tries[them]}×` : "&nbsp;"}</p>
+          <div class="row">${s.hint ? "" : `<button class="btn small ghost" ${A({ k: "hint", i: s.i })}>💡 Hint</button>`}<button class="btn small ghost" ${A({ k: "reveal", i: s.i })}>🏳️ Reveal answer</button></div>`;
+      }
+      return `<div class="g">${scores(ctx, s.score)}<div class="emoji-q confetti">${em}</div>
+        ${s.hint || over ? `<span class="badge">${esc(over ? cat : hint)}</span>` : ""}${body}</div>`;
+    },
+  };
+
   window.Games = {
-    list: [ticTacToe, connectFour, rps, memory, slide, drawGuess, hangman, trivia, wyr, knowMe],
+    list: [ticTacToe, connectFour, battleship, dots, rps, reaction, memory, slide, wordDuel, drawGuess, hangman, emojiRiddles,
+      trivia, wyr, knowMe, truthOrDare, neverHave],
     rng,
     esc,
   };

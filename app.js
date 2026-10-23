@@ -402,7 +402,11 @@
     return true;
   }
 
-  function resetStage() { stage.innerHTML = ""; stage._menu = null; stage._drawBound = false; stage._memSeq = undefined; }
+  function resetStage() {
+    clearTimeout(stage._rxTimer);
+    stage.innerHTML = "";
+    Object.assign(stage, { _menu: null, _drawBound: false, _memSeq: undefined, _rxRound: undefined, _rxGo: 0 });
+  }
 
   function paint() {
     const g = gameById(st.gameId);

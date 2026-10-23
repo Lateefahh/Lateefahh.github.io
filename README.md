@@ -10,7 +10,7 @@ A little website for two people to video call **and** play games together at the
 
 There's also a chat box and a ❤️ button that sends floating hearts.
 
-## The 10 games
+## The 17 games
 | | Game | How it works |
 |---|---|---|
 | ❌ | Tic-Tac-Toe | Take turns, three in a row wins |
@@ -23,6 +23,13 @@ There's also a chat box and a ❤️ button that sends floating hearts.
 | 🧠 | Trivia Duel | 10 questions, both answer |
 | 🤔 | Would You Rather | See how often you pick the same thing |
 | 💘 | How Well Do You Know Me? | One answers about themselves, the other guesses |
+| 🚢 | Battleship | Hide your fleet, take turns firing |
+| 🟦 | Dots & Boxes | Draw lines, close boxes to claim them |
+| 🟩 | Word Duel | Same secret 5-letter word, fewest guesses wins |
+| ⚡ | Reaction Race | Tap when it turns green — fastest wins |
+| 🔥 | Truth or Dare | Couple-friendly truths and video-call dares |
+| 🙈 | Never Have I Ever | Answer secretly, reveal together |
+| 🎬 | Emoji Riddles | Guess the movie or phrase from emojis |
 
 ## Putting it online (free, GitHub Pages)
 1. In this repo on GitHub go to **Settings → Pages**.
