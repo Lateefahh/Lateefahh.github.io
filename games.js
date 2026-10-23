@@ -543,32 +543,139 @@
     ["Which of these birds can't fly?", ["Penguin", "Parrot", "Pigeon", "Sparrow"], 0],
     ["What's the hottest planet in our solar system?", ["Mercury", "Venus", "Mars", "Jupiter"], 1],
     ["How many zeros are in one million?", ["5", "6", "7", "9"], 1],
+    ["What is the capital of France?", ["Lyon", "Paris", "Nice", "Marseille"], 1],
+    ["What is the capital of Egypt?", ["Alexandria", "Cairo", "Giza", "Luxor"], 1],
+    ["What is the capital of the United Kingdom?", ["Manchester", "London", "Edinburgh", "Liverpool"], 1],
+    ["What is the capital of Italy?", ["Milan", "Venice", "Rome", "Naples"], 2],
+    ["What is the capital of Spain?", ["Barcelona", "Madrid", "Seville", "Valencia"], 1],
+    ["What is the capital of the USA?", ["New York", "Washington, D.C.", "Los Angeles", "Chicago"], 1],
+    ["What is the capital of South Korea?", ["Busan", "Seoul", "Incheon", "Pyongyang"], 1],
+    ["What is the capital of Germany?", ["Munich", "Berlin", "Hamburg", "Frankfurt"], 1],
+    ["Which country has the most people in the world today?", ["China", "India", "USA", "Indonesia"], 1],
+    ["Mount Kilimanjaro is in which country?", ["Kenya", "Tanzania", "Uganda", "Ethiopia"], 1],
+    ["Which river flows through London?", ["Seine", "Thames", "Danube", "Rhine"], 1],
+    ["Which country is shaped like a boot?", ["Spain", "Greece", "Italy", "Portugal"], 2],
+    ["The Great Wall is in which country?", ["Japan", "China", "Korea", "Mongolia"], 1],
+    ["Which US state is called the Sunshine State?", ["California", "Florida", "Texas", "Hawaii"], 1],
+    ["What's the biggest city in Nigeria by population?", ["Abuja", "Lagos", "Kano", "Port Harcourt"], 1],
+    ["Which country borders Nigeria to the west?", ["Cameroon", "Benin", "Niger", "Chad"], 1],
+    ["Nigeria is named after which river?", ["Benue", "Niger", "Congo", "Volta"], 1],
+    ["Dubai is in which country?", ["Saudi Arabia", "Qatar", "United Arab Emirates", "Oman"], 2],
+    ["Which is the coldest continent?", ["Asia", "Antarctica", "Europe", "North America"], 1],
+    ["In which sea can you float easily because it's so salty?", ["Red Sea", "Dead Sea", "Black Sea", "Caspian Sea"], 1],
+    ["What is H₂O better known as?", ["Salt", "Water", "Hydrogen", "Oxygen"], 1],
+    ["How many bones does a shark have?", ["0", "50", "200", "300"], 0],
+    ["What is the largest bird in the world?", ["Eagle", "Ostrich", "Emu", "Albatross"], 1],
+    ["Which bird is the fastest when diving?", ["Bald eagle", "Peregrine falcon", "Hawk", "Swift"], 1],
+    ["What do pandas mostly eat?", ["Fish", "Bamboo", "Berries", "Insects"], 1],
+    ["How many legs does an insect have?", ["4", "6", "8", "10"], 1],
+    ["What is the center of an atom called?", ["Electron", "Nucleus", "Neutrino", "Photon"], 1],
+    ["What force keeps our feet on the ground?", ["Magnetism", "Gravity", "Friction", "Inertia"], 1],
+    ["Which planet has the Great Red Spot storm?", ["Mars", "Jupiter", "Saturn", "Neptune"], 1],
+    ["Which part of a plant makes food from sunlight?", ["Roots", "Leaves", "Stem", "Flowers"], 1],
+    ["What are animals that eat only plants called?", ["Carnivores", "Herbivores", "Omnivores", "Insectivores"], 1],
+    ["Which blood type is the universal donor?", ["A+", "O−", "AB+", "B−"], 1],
+    ["How long does Earth take to go around the Sun?", ["24 hours", "30 days", "About 365 days", "10 years"], 2],
+    ["At what temperature does water freeze in °C?", ["-10°C", "0°C", "10°C", "32°C"], 1],
+    ["Which organs do you breathe with?", ["Liver", "Lungs", "Kidneys", "Stomach"], 1],
+    ["Which animal has a long trunk?", ["Rhino", "Elephant", "Hippo", "Giraffe"], 1],
+    ["How many eyes does a honeybee have?", ["2", "3", "5", "8"], 2],
+    ["Which of these animals can sleep standing up?", ["Cats", "Horses", "Dogs", "Rabbits"], 1],
+    ["What's the only mammal that can truly fly?", ["Flying squirrel", "Bat", "Sugar glider", "Flying lemur"], 1],
+    ["Which gas do we need to breathe in to live?", ["Carbon dioxide", "Oxygen", "Nitrogen", "Helium"], 1],
+    ["Who sang 'Essence' featuring Tems?", ["Davido", "Wizkid", "Burna Boy", "Olamide"], 1],
+    ["Who sang the hit song 'Fall' (2017)?", ["Davido", "Wizkid", "Mr Eazi", "Kizz Daniel"], 0],
+    ["Which Nigerian singer is nicknamed 'Starboy'?", ["Wizkid", "Davido", "Rema", "Fireboy DML"], 0],
+    ["What is Nigeria's film industry called?", ["Bollywood", "Nollywood", "Hollywood", "Ghallywood"], 1],
+    ["Who sang 'Single Ladies (Put a Ring on It)'?", ["Rihanna", "Beyoncé", "Shakira", "Alicia Keys"], 1],
+    ["Beyoncé first became famous in which group?", ["TLC", "Destiny's Child", "Spice Girls", "En Vogue"], 1],
+    ["What's the name of the snowman in Frozen?", ["Sven", "Olaf", "Kristoff", "Hans"], 1],
+    ["In The Lion King, what is Simba's father's name?", ["Scar", "Mufasa", "Rafiki", "Zazu"], 1],
+    ["Which school of magic does Harry Potter attend?", ["Beauxbatons", "Hogwarts", "Durmstrang", "Ilvermorny"], 1],
+    ["Who sang 'Hello' in 2015?", ["Adele", "Sia", "Taylor Swift", "Lana Del Rey"], 0],
+    ["Which movie has the famous line 'I'll be back'?", ["Rambo", "The Terminator", "Die Hard", "Rocky"], 1],
+    ["What color is Patrick Star from SpongeBob?", ["Blue", "Pink", "Yellow", "Green"], 1],
+    ["Which app is famous for short dance videos?", ["LinkedIn", "TikTok", "Pinterest", "Zoom"], 1],
+    ["Who wrote 'Things Fall Apart'?", ["Wole Soyinka", "Chinua Achebe", "Chimamanda Adichie", "Ben Okri"], 1],
+    ["Which Nigerian won the Nobel Prize in Literature in 1986?", ["Chinua Achebe", "Wole Soyinka", "Ken Saro-Wiwa", "Cyprian Ekwensi"], 1],
+    ["Who wrote 'Purple Hibiscus'?", ["Chimamanda Ngozi Adichie", "Buchi Emecheta", "Chinua Achebe", "Ayobami Adebayo"], 0],
+    ["Which superhero is called the 'Man of Steel'?", ["Batman", "Superman", "Iron Man", "The Flash"], 1],
+    ["What is Mickey Mouse's girlfriend called?", ["Daisy", "Minnie", "Clarabelle", "Mabel"], 1],
+    ["Which Marvel hero swings a hammer called Mjolnir?", ["Hulk", "Thor", "Loki", "Vision"], 1],
+    ["Which K-pop group sang 'Dynamite'?", ["BLACKPINK", "BTS", "EXO", "TWICE"], 1],
+    ["How many players per team are on a volleyball court?", ["5", "6", "7", "8"], 1],
+    ["Which footballer is nicknamed 'CR7'?", ["Cristiano Ronaldo", "Ronaldinho", "Rivaldo", "Roberto Carlos"], 0],
+    ["How long is a normal football (soccer) match?", ["60 minutes", "80 minutes", "90 minutes", "120 minutes"], 2],
+    ["What is Nigeria's national football team called?", ["Black Stars", "Super Eagles", "Indomitable Lions", "Pharaohs"], 1],
+    ["How many rings are on the Olympic flag?", ["4", "5", "6", "7"], 1],
+    ["In which sport do you hit a 'home run'?", ["Cricket", "Baseball", "Golf", "Tennis"], 1],
+    ["Who holds the men's 100m world record?", ["Carl Lewis", "Usain Bolt", "Tyson Gay", "Yohan Blake"], 1],
+    ["How many points is a touchdown worth in American football?", ["3", "6", "7", "2"], 1],
+    ["Which country is famous for sumo wrestling?", ["China", "Japan", "Korea", "Mongolia"], 1],
+    ["Which country is Lionel Messi from?", ["Spain", "Argentina", "Brazil", "Portugal"], 1],
+    ["What is the main ingredient in hummus?", ["Lentils", "Chickpeas", "Black beans", "Peas"], 1],
+    ["Puff-puff is mostly made from what?", ["Rice flour", "Wheat flour", "Cassava", "Corn"], 1],
+    ["Garri is made from what?", ["Yam", "Cassava", "Maize", "Plantain"], 1],
+    ["In Nigerian food, what is 'dodo'?", ["Fried yam", "Fried plantain", "Fried beans", "Fried fish"], 1],
+    ["Sushi rolls are usually wrapped in what?", ["Lettuce", "Seaweed", "Rice paper", "Banana leaf"], 1],
+    ["Which country is most famous for croissants?", ["Italy", "France", "Belgium", "Spain"], 1],
+    ["What drink is made from fermented grapes?", ["Beer", "Wine", "Cider", "Whisky"], 1],
+    ["Which nut is marzipan made from?", ["Peanut", "Almond", "Cashew", "Walnut"], 1],
+    ["Which spice gives curry its yellow color?", ["Paprika", "Turmeric", "Cumin", "Ginger"], 1],
+    ["What is tofu made from?", ["Rice", "Soybeans", "Chickpeas", "Wheat"], 1],
+    ["Which winged boy with a bow stands for love in Roman myths?", ["Apollo", "Cupid", "Mercury", "Hermes"], 1],
+    ["Which flower is the classic Valentine's gift?", ["Tulip", "Rose", "Lily", "Daisy"], 1],
+    ["Which finger is a wedding ring usually worn on?", ["Index finger", "Middle finger", "Ring finger", "Pinky"], 2],
+    ["Which wedding anniversary is the 'golden' one?", ["25th", "40th", "50th", "60th"], 2],
+    ["What is the 25th wedding anniversary called?", ["Gold", "Silver", "Ruby", "Pearl"], 1],
+    ["Which city is called the 'City of Love'?", ["Rome", "Paris", "Venice", "Vienna"], 1],
+    ["How many days does February have in a normal (non-leap) year?", ["28", "29", "30", "31"], 0],
+    ["How many minutes are in 2 hours?", ["100", "120", "140", "160"], 1],
+    ["Which is longer: a kilometer or a mile?", ["Kilometer", "Mile", "They're the same", "It depends"], 1],
+    ["What color do you get mixing red and white?", ["Purple", "Pink", "Orange", "Peach"], 1],
+    ["Which company owns WhatsApp?", ["Google", "Meta", "Apple", "Microsoft"], 1],
+    ["Who co-founded Microsoft?", ["Steve Jobs", "Bill Gates", "Mark Zuckerberg", "Elon Musk"], 1],
+    ["Who co-founded Apple with Steve Wozniak?", ["Bill Gates", "Steve Jobs", "Tim Cook", "Larry Page"], 1],
+    ["What does 'LOL' stand for?", ["Lots of love", "Laugh out loud", "Lots of laughs", "Living out loud"], 1],
+    ["Which game has a king, queen, rook and bishop?", ["Checkers", "Chess", "Ludo", "Monopoly"], 1],
+    ["How many squares are on a chessboard?", ["36", "49", "64", "81"], 2],
+    ["Which planet is named after the Roman god of war?", ["Jupiter", "Mars", "Saturn", "Mercury"], 1],
+    ["'Bonjour' means hello in which language?", ["Spanish", "French", "Italian", "Portuguese"], 1],
+    ["How many letters are in the English alphabet?", ["24", "25", "26", "27"], 2],
   ];
   const TRIVIA_N = 10;
-  // Pick questions you haven't seen yet this session; start over once they've all been used.
-  function triviaPick(rand, seen) {
-    let pool = range(TRIVIA.length).filter((q) => !seen.includes(q));
-    if (pool.length < TRIVIA_N) { seen = []; pool = range(TRIVIA.length); }
-    const qs = shuffle(pool, rand).slice(0, TRIVIA_N);
-    return { qs, seen: seen.concat(qs) };
+  // Each round: mostly questions you've never played, plus 1–2 "second chance" repeats
+  // (preferring ones someone got wrong). Starts over once every question has been played.
+  const validQs = (list) => (Array.isArray(list) ? list.filter((q) => Number.isInteger(q) && q >= 0 && q < TRIVIA.length) : []);
+  function triviaPick(rand, carry) {
+    let seen = validQs(carry && carry.seen), missed = validQs(carry && carry.missed).filter((q) => seen.includes(q));
+    let reps = seen.length >= 2 ? 1 + Math.floor(rand() * 2) : 0;
+    let fresh = range(TRIVIA.length).filter((q) => !seen.includes(q));
+    if (fresh.length < TRIVIA_N - reps) { seen = []; missed = []; reps = 0; fresh = range(TRIVIA.length); }
+    const repeats = shuffle(missed, rand).concat(shuffle(seen.filter((q) => !missed.includes(q)), rand)).slice(0, reps);
+    const newQs = shuffle(fresh, rand).slice(0, TRIVIA_N - repeats.length);
+    return { qs: shuffle(newQs.concat(repeats), rand), repeats, seen: seen.concat(newQs), missed };
   }
   const trivia = {
     id: "trivia", name: "Trivia Duel", icon: "🧠", tag: "Questions", blurb: `10 questions from a bank of ${TRIVIA.length}. Both answer, then see who was right.`,
-    init: (rand, seen = []) => Object.assign(triviaPick(rand, seen), { i: 0, ans: [null, null], score: [0, 0], round: 0 }),
+    init: (rand, carry) => Object.assign(triviaPick(rand, carry), { i: 0, ans: [null, null], score: [0, 0], round: 0 }),
+    carry: (s) => ({ seen: s.seen, missed: s.missed }),
     apply(s, a, p, rand) {
       if (a.k === "answer") {
         if (s.i >= s.qs.length || s.ans[p] !== null || a.i !== s.i) return false;
         s.ans[p] = a.c;
         if (s.ans[0] !== null && s.ans[1] !== null) {
-          const right = TRIVIA[s.qs[s.i]][2];
-          [0, 1].forEach((q) => { if (s.ans[q] === right) s.score[q]++; });
+          const right = TRIVIA[s.qs[s.i]][2], q = s.qs[s.i];
+          [0, 1].forEach((x) => { if (s.ans[x] === right) s.score[x]++; });
+          s.missed = s.missed.filter((m) => m !== q);
+          if (s.ans.some((x) => x !== right)) s.missed.push(q); // someone got it wrong: may come back as a second chance
         }
       } else if (a.k === "next") {
         if (a.i !== s.i || s.ans.includes(null)) return false;
         s.i++; s.ans = [null, null];
       } else if (a.k === "again") {
         if (a.round !== s.round || s.i < s.qs.length) return false;
-        Object.assign(s, trivia.init(rand, s.seen || []), { round: s.round + 1 });
+        Object.assign(s, trivia.init(rand, trivia.carry(s)), { round: s.round + 1 });
       } else return false;
     },
     render(s, ctx) {
@@ -580,7 +687,8 @@
       }
       const [q, opts, right] = TRIVIA[s.qs[s.i]];
       const both = !s.ans.includes(null), mine = s.ans[ctx.me], them = 1 - ctx.me;
-      return `<div class="g">${scores(ctx, s.score)}<span class="badge">Question ${s.i + 1} of ${s.qs.length}</span>
+      const again = (s.repeats || []).includes(s.qs[s.i]) ? ` · 🔁 Second chance — you've seen this one` : "";
+      return `<div class="g">${scores(ctx, s.score)}<span class="badge">Question ${s.i + 1} of ${s.qs.length}${again}</span>
         <p class="big-q">${esc(q)}</p>
         <div class="row">${opts.map((o, c) => {
           let cls = !both && mine === c ? "picked" : "";

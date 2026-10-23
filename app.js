@@ -194,10 +194,11 @@
         break;
       case "sync":
         st.gameId = m.id || null; st.gs = m.gs || null;
+        saveCarry();
         resetStage(); paint();
         break;
       case "select":
-        applySelect(m.id, m.r);
+        applySelect(m.id, m.r, m.carry);
         break;
       case "act":
         if (m.id === st.gameId && st.gs) applyAction(m.a, other());
@@ -387,14 +388,27 @@
   function selectGame(id) {
     if (id && !connected()) toast("Your partner isn't here yet — the game will be waiting for them 💌");
     const r = rand32();
-    applySelect(id, r);
-    send({ t: "select", id, r });
+    const carry = loadCarry(id); // e.g. which trivia questions you've already played; sent so both sides start identically
+    applySelect(id, r, carry);
+    send({ t: "select", id, r, carry });
   }
-  function applySelect(id, r) {
+  function applySelect(id, r, carry) {
     const g = gameById(id);
     st.gameId = g ? id : null;
-    st.gs = g ? g.init(rng(r)) : null;
+    st.gs = g ? g.init(rng(r), carry) : null;
+    saveCarry();
     resetStage(); paint();
+  }
+  // Games with a carry() keep a little history between visits (in this browser).
+  function loadCarry(id) {
+    const g = gameById(id);
+    if (!g || !g.carry) return undefined;
+    try { return JSON.parse(localStorage.getItem("ustwo-carry-" + id)) || undefined; } catch (e) { return undefined; }
+  }
+  function saveCarry() {
+    const g = gameById(st.gameId);
+    if (!g || !g.carry || !st.gs) return;
+    try { localStorage.setItem("ustwo-carry-" + g.id, JSON.stringify(g.carry(st.gs))); } catch (e) { /* storage blocked */ }
   }
   function act(a) {
     if (!st.gs) return;
@@ -407,6 +421,7 @@
     const next = JSON.parse(JSON.stringify(st.gs)); // plain-data clone; works on older phones without structuredClone
     if (g.apply(next, a, p, rng(a.r >>> 0)) === false) return false;
     st.gs = next;
+    saveCarry();
     paint();
     return true;
   }
