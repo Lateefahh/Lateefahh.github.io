@@ -80,7 +80,15 @@
     return c.captureStream ? c.captureStream(1) : new MediaStream();
   }
 
+  function peerMissing() {
+    if (window.Peer) return false;
+    lobbyStatus("The video-call part didn't load. Check your internet, then refresh the page.");
+    setLobbyBusy(false);
+    return true;
+  }
+
   async function createRoom(name) {
+    if (peerMissing()) return;
     setLobbyBusy(true);
     st.host = true; st.me = 0; st.names[0] = name;
     st.localStream = await getMedia();
@@ -105,6 +113,7 @@
   }
 
   async function joinRoom(name, code) {
+    if (peerMissing()) return;
     setLobbyBusy(true);
     st.host = false; st.me = 1; st.names[1] = name; st.code = code;
     st.localStream = await getMedia();
@@ -395,7 +404,7 @@
   }
   function applyAction(a, p) {
     const g = gameById(st.gameId);
-    const next = structuredClone(st.gs);
+    const next = JSON.parse(JSON.stringify(st.gs)); // plain-data clone; works on older phones without structuredClone
     if (g.apply(next, a, p, rng(a.r >>> 0)) === false) return false;
     st.gs = next;
     paint();
