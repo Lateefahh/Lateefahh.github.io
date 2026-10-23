@@ -478,11 +478,83 @@
     ["Which fruit has its seeds on the outside?", ["Kiwi", "Strawberry", "Raspberry", "Fig"], 1],
     ["What's the largest country by area?", ["Canada", "China", "USA", "Russia"], 3],
     ["Which bird is a symbol of peace?", ["Eagle", "Dove", "Swan", "Owl"], 1],
+    ["What is the capital of Nigeria?", ["Lagos", "Abuja", "Kano", "Ibadan"], 1],
+    ["Which planet is closest to the Sun?", ["Venus", "Earth", "Mercury", "Mars"], 2],
+    ["What is the largest hot desert in the world?", ["Gobi", "Kalahari", "Sahara", "Arabian"], 2],
+    ["How many sides does a hexagon have?", ["5", "6", "7", "8"], 1],
+    ["Who wrote the Harry Potter books?", ["J.K. Rowling", "Roald Dahl", "Suzanne Collins", "Stephen King"], 0],
+    ["At what temperature does water boil at sea level?", ["90°C", "100°C", "110°C", "120°C"], 1],
+    ["Which is the most populous country in Africa?", ["Egypt", "Ethiopia", "Nigeria", "South Africa"], 2],
+    ["Which element has the symbol 'O'?", ["Gold", "Oxygen", "Silver", "Iron"], 1],
+    ["How many legs does a spider have?", ["6", "8", "10", "12"], 1],
+    ["Who released the album 'Thriller'?", ["Prince", "Michael Jackson", "Stevie Wonder", "Whitney Houston"], 1],
+    ["In which city is the Eiffel Tower?", ["Rome", "London", "Paris", "Madrid"], 2],
+    ["What's the largest organ of the human body?", ["Liver", "Brain", "Skin", "Heart"], 2],
+    ["What is the tallest animal in the world?", ["Elephant", "Giraffe", "Camel", "Ostrich"], 1],
+    ["What is the square root of 81?", ["7", "8", "9", "10"], 2],
+    ["On which continent is Egypt?", ["Asia", "Africa", "Europe", "South America"], 1],
+    ["Which sport is played at Wimbledon?", ["Golf", "Cricket", "Tennis", "Rugby"], 2],
+    ["What does 'www' stand for in a website address?", ["World Wide Web", "Wide World Web", "Web World Wide", "World Web Wide"], 0],
+    ["Which is the smallest planet in our solar system?", ["Mars", "Mercury", "Uranus", "Venus"], 1],
+    ["What is the main language spoken in Mexico?", ["Portuguese", "Spanish", "English", "French"], 1],
+    ["How many hours are in a week?", ["148", "158", "168", "178"], 2],
+    ["Who was the first person to walk on the Moon?", ["Buzz Aldrin", "Neil Armstrong", "Yuri Gagarin", "Michael Collins"], 1],
+    ["'An ___ a day keeps the doctor away' — which fruit?", ["Banana", "Apple", "Orange", "Grape"], 1],
+    ["What is the national animal of Scotland?", ["Lion", "Unicorn", "Stag", "Eagle"], 1],
+    ["Which ocean lies between Africa and Australia?", ["Atlantic", "Pacific", "Indian", "Arctic"], 2],
+    ["What color is a ruby?", ["Blue", "Green", "Red", "Purple"], 2],
+    ["Which music genre did Bob Marley make famous worldwide?", ["Jazz", "Reggae", "Afrobeat", "Blues"], 1],
+    ["Which Nigerian star calls himself 'Odogwu'?", ["Wizkid", "Davido", "Burna Boy", "Rema"], 2],
+    ["Which Nigerian artist sang 'Calm Down'?", ["Rema", "Asake", "Tems", "CKay"], 0],
+    ["What is the currency of Nigeria?", ["Cedi", "Naira", "Rand", "Shilling"], 1],
+    ["Accra is the capital of which country?", ["Ghana", "Kenya", "Senegal", "Togo"], 0],
+    ["How many players per team are on a basketball court?", ["4", "5", "6", "7"], 1],
+    ["Which country won the 2022 FIFA World Cup?", ["France", "Brazil", "Argentina", "Croatia"], 2],
+    ["What is the longest bone in the human body?", ["Femur", "Spine", "Skull", "Humerus"], 0],
+    ["What do caterpillars turn into?", ["Bees", "Butterflies", "Beetles", "Dragonflies"], 1],
+    ["Which company makes the iPhone?", ["Samsung", "Google", "Apple", "Nokia"], 2],
+    ["What's the name of the cowboy in Toy Story?", ["Buzz", "Woody", "Rex", "Hamm"], 1],
+    ["Which planet is famous for its big rings?", ["Jupiter", "Saturn", "Mars", "Mercury"], 1],
+    ["How many colors are in a rainbow?", ["5", "6", "7", "8"], 2],
+    ["What is 12 × 12?", ["124", "144", "132", "148"], 1],
+    ["Which country is famous for maple syrup?", ["USA", "Canada", "Norway", "Sweden"], 1],
+    ["Who painted 'The Starry Night'?", ["Monet", "Van Gogh", "Picasso", "Rembrandt"], 1],
+    ["Which is the largest continent?", ["Africa", "Asia", "North America", "Europe"], 1],
+    ["What do bees collect from flowers to make honey?", ["Nectar", "Sap", "Dew", "Seeds"], 0],
+    ["What is the capital of Japan?", ["Osaka", "Kyoto", "Tokyo", "Seoul"], 2],
+    ["How many sides does an octagon have?", ["6", "7", "8", "10"], 2],
+    ["Which famous ship sank on its first voyage in 1912?", ["Lusitania", "Titanic", "Britannic", "Queen Mary"], 1],
+    ["Which superhero is the king of Wakanda?", ["Black Panther", "Iron Man", "Thor", "Captain America"], 0],
+    ["What is the fear of spiders called?", ["Claustrophobia", "Arachnophobia", "Acrophobia", "Agoraphobia"], 1],
+    ["On what date is Valentine's Day?", ["Feb 12", "Feb 14", "Feb 16", "Mar 14"], 1],
+    ["How many teeth does an adult human usually have?", ["28", "30", "32", "36"], 2],
+    ["In which country is the Taj Mahal?", ["Pakistan", "India", "Bangladesh", "Nepal"], 1],
+    ["Which animal is called the 'King of the Jungle'?", ["Tiger", "Lion", "Elephant", "Gorilla"], 1],
+    ["What's the main ingredient in jollof rice?", ["Beans", "Rice", "Yam", "Plantain"], 1],
+    ["Which country gave the world pizza?", ["France", "Greece", "Italy", "USA"], 2],
+    ["How many weeks are in a year?", ["50", "52", "54", "56"], 1],
+    ["Who is known as the 'Queen of Pop'?", ["Beyoncé", "Madonna", "Rihanna", "Lady Gaga"], 1],
+    ["What is the closest star to Earth?", ["Sirius", "Polaris", "The Sun", "Alpha Centauri"], 2],
+    ["What is a baby kangaroo called?", ["Cub", "Joey", "Kit", "Calf"], 1],
+    ["What is the capital of Kenya?", ["Mombasa", "Nairobi", "Kampala", "Addis Ababa"], 1],
+    ["How many Grand Slam tennis tournaments are there each year?", ["3", "4", "5", "6"], 1],
+    ["Which vitamin does your skin make from sunlight?", ["Vitamin A", "Vitamin C", "Vitamin D", "Vitamin K"], 2],
+    ["Who came up with the theory of relativity?", ["Isaac Newton", "Albert Einstein", "Charles Darwin", "Nikola Tesla"], 1],
+    ["Which of these birds can't fly?", ["Penguin", "Parrot", "Pigeon", "Sparrow"], 0],
+    ["What's the hottest planet in our solar system?", ["Mercury", "Venus", "Mars", "Jupiter"], 1],
+    ["How many zeros are in one million?", ["5", "6", "7", "9"], 1],
   ];
   const TRIVIA_N = 10;
+  // Pick questions you haven't seen yet this session; start over once they've all been used.
+  function triviaPick(rand, seen) {
+    let pool = range(TRIVIA.length).filter((q) => !seen.includes(q));
+    if (pool.length < TRIVIA_N) { seen = []; pool = range(TRIVIA.length); }
+    const qs = shuffle(pool, rand).slice(0, TRIVIA_N);
+    return { qs, seen: seen.concat(qs) };
+  }
   const trivia = {
-    id: "trivia", name: "Trivia Duel", icon: "🧠", tag: "Questions", blurb: "10 questions. Both answer, then see who was right.",
-    init: (rand) => ({ qs: shuffle(range(TRIVIA.length), rand).slice(0, TRIVIA_N), i: 0, ans: [null, null], score: [0, 0], round: 0 }),
+    id: "trivia", name: "Trivia Duel", icon: "🧠", tag: "Questions", blurb: `10 questions from a bank of ${TRIVIA.length}. Both answer, then see who was right.`,
+    init: (rand, seen = []) => Object.assign(triviaPick(rand, seen), { i: 0, ans: [null, null], score: [0, 0], round: 0 }),
     apply(s, a, p, rand) {
       if (a.k === "answer") {
         if (s.i >= s.qs.length || s.ans[p] !== null || a.i !== s.i) return false;
@@ -496,7 +568,7 @@
         s.i++; s.ans = [null, null];
       } else if (a.k === "again") {
         if (a.round !== s.round || s.i < s.qs.length) return false;
-        Object.assign(s, trivia.init(rand), { round: s.round + 1 });
+        Object.assign(s, trivia.init(rand, s.seen || []), { round: s.round + 1 });
       } else return false;
     },
     render(s, ctx) {
