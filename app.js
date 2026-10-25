@@ -428,8 +428,9 @@
 
   function resetStage() {
     clearTimeout(stage._rxTimer);
+    clearInterval(stage._chTimer);
     stage.innerHTML = "";
-    Object.assign(stage, { _menu: null, _drawBound: false, _memSeq: undefined, _rxRound: undefined, _rxGo: 0 });
+    Object.assign(stage, { _menu: null, _drawBound: false, _memSeq: undefined, _rxRound: undefined, _rxGo: 0, _chTurn: undefined });
   }
 
   function paint() {

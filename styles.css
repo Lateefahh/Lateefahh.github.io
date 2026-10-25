@@ -345,6 +345,17 @@ input:focus { border-color: var(--pink); box-shadow: 0 0 0 3px rgba(255, 92, 138
 .tod-card small { letter-spacing: .12em; color: var(--peach); font-weight: 600; }
 .tod-card p { font-size: 1.35rem; margin: 10px 0 0; line-height: 1.35; }
 
+/* charades */
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; width: 100%; max-width: 560px; }
+.cat-grid .choice { min-width: 0; max-width: none; }
+.ch-timer {
+  width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center; font-size: 2.4rem; font-weight: 700;
+  border: 5px solid var(--mint); font-variant-numeric: tabular-nums;
+}
+.ch-timer.low { border-color: var(--red); color: var(--red); animation: beat 1s ease-in-out infinite; }
+.ch-word { font-size: 2rem !important; font-weight: 700; }
+.guesses span.ok { background: rgba(95, 224, 180, .25); }
+
 /* emoji riddles */
 .emoji-q { font-size: 3.6rem; letter-spacing: .1em; line-height: 1.2; }
 

@@ -1242,8 +1242,131 @@
     },
   };
 
+  // ---------- 18. Charades ----------
+  const CHARADES = {
+    movies: { name: "Movies", icon: "🎬", words: ["Titanic", "The Lion King", "Frozen", "Spider-Man", "Jurassic Park", "Harry Potter",
+      "Finding Nemo", "Black Panther", "Toy Story", "Shrek", "The Avengers", "Jaws", "Home Alone", "Star Wars", "Batman", "The Little Mermaid",
+      "Aladdin", "Kung Fu Panda", "Fast and Furious", "Rocky", "Ghostbusters", "Superman", "Coming to America", "King of Boys",
+      "The Wedding Party", "Moana", "Cinderella", "Beauty and the Beast", "Up", "Pirates of the Caribbean"] },
+    animals: { name: "Animals", icon: "🐾", words: ["Elephant", "Monkey", "Kangaroo", "Snake", "Penguin", "Chicken", "Cat", "Dog", "Frog",
+      "Giraffe", "Lion", "Shark", "Butterfly", "Crab", "Gorilla", "Horse", "Duck", "Rabbit", "Octopus", "Bat", "Cow", "Goat", "Peacock",
+      "Crocodile", "Spider", "Owl", "Turtle", "Bee", "Dolphin", "Flamingo"] },
+    actions: { name: "Actions", icon: "🏃", words: ["Brushing teeth", "Swimming", "Cooking jollof", "Taking a selfie", "Driving a car",
+      "Playing guitar", "Riding a bike", "Sleeping", "Dancing", "Washing clothes", "Flying a kite", "Fishing", "Typing", "Sneezing",
+      "Ironing clothes", "Climbing a ladder", "Painting a wall", "Skipping rope", "Boxing", "Surfing", "Changing a diaper", "Proposing",
+      "Getting a haircut", "Doing push-ups", "Eating spaghetti", "Walking in heels", "Bowling", "Juggling", "Skydiving", "Milking a cow"] },
+    jobs: { name: "Jobs", icon: "💼", words: ["Doctor", "Teacher", "Chef", "Pilot", "Police officer", "Firefighter", "Barber", "Dentist", "DJ",
+      "Photographer", "Singer", "Farmer", "Magician", "Astronaut", "Waiter", "Mechanic", "Nurse", "Lawyer", "Painter", "Footballer",
+      "Okada rider", "Tailor", "Clown", "Lifeguard", "Bus conductor", "Judge", "Scientist", "Fisherman", "News reporter", "Security guard"] },
+    love: { name: "Love & Life", icon: "💞", words: ["First date", "Blowing a kiss", "Wedding", "Honeymoon", "Slow dance", "Love letter",
+      "Holding hands", "Breakup", "Getting engaged", "Cuddling", "Heart sign", "Serenade", "Flirting", "Buying flowers", "Breakfast in bed",
+      "Couple selfie", "Video call", "Jealous", "Butterflies in stomach", "Surprise party", "Anniversary", "Candlelit dinner", "Sharing earphones",
+      "Winking", "Hug", "Forehead kiss", "Packing for a trip", "Movie night", "I love you", "Missing you"] },
+    naija: { name: "Naija Vibes", icon: "🇳🇬", words: ["Danfo bus", "Owambe party", "Spraying money", "Jollof rice", "NEPA took light",
+      "Generator", "Pounded yam", "Tying gele", "Afrobeats", "Super Eagles goal", "Lagos traffic", "Suya", "Market woman", "Wedding entrance dance",
+      "Fufu", "Church praise", "Nollywood actor", "Palm wine", "Agbada", "Keke Napep", "Okada", "Buying pure water", "Bargaining at the market",
+      "Zanku dance", "Pepper soup", "Mosquito", "Area boys", "Aunty asking when you'll marry", "Plantain", "Wahala"] },
+  };
+  const CH_SECS = 60;
+  const charades = {
+    id: "charades", name: "Charades", icon: "🎭", tag: "Couples", blurb: "Act it out on camera — no talking! 60 seconds per turn, then swap.",
+    init: () => ({ actor: 0, phase: "pick", cat: null, deck: [], di: 0, got: [], skipped: [], guesses: [], score: [0, 0], turn: 0 }),
+    apply(s, a, p, rand) {
+      if (a.k === "start") {
+        if (p !== s.actor || s.phase !== "pick") return false;
+        const cat = a.cat === "random" ? Object.keys(CHARADES)[Math.floor(rand() * 6)] : a.cat;
+        if (!CHARADES[cat]) return false;
+        Object.assign(s, { phase: "act", cat, deck: shuffle(range(CHARADES[cat].words.length), rand), di: 0, got: [], skipped: [], guesses: [], turn: s.turn + 1 });
+      } else if (a.k === "got" || a.k === "skip") {
+        // Only the actor moves to the next word, so both screens always agree on which word is current.
+        if (p !== s.actor || s.phase !== "act" || a.w !== s.di) return false;
+        const word = CHARADES[s.cat].words[s.deck[s.di % s.deck.length]];
+        if (a.k === "got") { s.got.push(word); s.score[s.actor]++; } else s.skipped.push(word);
+        s.di++;
+      } else if (a.k === "guess") {
+        const t = String(a.text || "").trim().slice(0, 40);
+        if (p === s.actor || s.phase !== "act" || !t) return false;
+        const w = +a.w;
+        const word = CHARADES[s.cat].words[s.deck[w % s.deck.length]];
+        s.guesses.push({ t, w, ok: w === s.di && norm(t).replace(/^the/, "") === norm(word).replace(/^the/, "") });
+        if (s.guesses.length > 8) s.guesses.shift();
+      } else if (a.k === "timeup") {
+        if (a.turn !== s.turn || s.phase !== "act") return false;
+        s.phase = "over";
+      } else if (a.k === "next") {
+        if (a.turn !== s.turn || s.phase !== "over") return false;
+        s.actor = 1 - s.actor; s.phase = "pick";
+      } else return false;
+    },
+    render(s, ctx) {
+      const me = ctx.me, acting = s.actor === me, other = 1 - s.actor;
+      const head = `<div class="g">${scores(ctx, s.score, s.actor)}
+        <span class="badge">Score = words your partner guessed while you were acting</span></div>`;
+      if (s.phase === "pick") {
+        return {
+          head,
+          main: `<div class="g" style="margin-top:12px">${acting
+            ? `<p class="msg-line">Your turn to act! 🎭 Pick a category — you'll have ${CH_SECS} seconds. No talking!</p>
+               <div class="cat-grid">${Object.entries(CHARADES).map(([k, c]) => `<button class="choice" ${A({ k: "start", cat: k })}>${c.icon} ${c.name}</button>`).join("")}
+               <button class="choice" ${A({ k: "start", cat: "random" })}>🎲 Surprise me</button></div>`
+            : `<p class="msg-line">${nm(ctx, s.actor)} is picking a category… get ready to guess! 👀</p>`}</div>`,
+        };
+      }
+      const cat = CHARADES[s.cat];
+      if (s.phase === "over") {
+        return {
+          head,
+          main: `<div class="g" style="margin-top:12px"><p class="msg-line win">⏰ Time's up! ${who(ctx, other)} guessed ${s.got.length} word${s.got.length === 1 ? "" : "s"} 🎉</p>
+            <div class="answers"><div class="answer p${s.actor}"><small>✅ Guessed</small>${s.got.map(esc).join(", ") || "—"}</div>
+            <div class="answer"><small>⏭ Skipped</small>${s.skipped.map(esc).join(", ") || "—"}</div></div>
+            <button class="btn primary" ${A({ k: "next", turn: s.turn })}>Next — ${p2(ctx, other)} act${other === me ? "" : "s"} 🎭</button></div>`,
+        };
+      }
+      const word = cat.words[s.deck[s.di % s.deck.length]];
+      const guesses = s.guesses.length ? `<div class="guesses">${s.guesses.map((g) => `<span class="${g.ok ? "ok" : ""}">${g.ok ? "✅ " : ""}${esc(g.t)}</span>`).join("")}</div>` : "";
+      return {
+        head,
+        // the timer section only changes per turn, so its element survives re-renders and the countdown keeps ticking
+        timer: `<div class="g" style="margin-top:10px"><div class="ch-timer" data-ch-turn="${s.turn}">${CH_SECS}</div>
+          <span class="badge">${cat.icon} ${cat.name} · ${s.got.length} guessed so far</span></div>`,
+        main: `<div class="g" style="margin-top:12px">${acting
+          ? `<div class="tod-card"><small>ACT THIS OUT — NO TALKING 🤐</small><p class="ch-word">${esc(word)}</p></div>
+             <div class="row"><button class="btn primary" ${A({ k: "got", w: s.di })}>✅ They got it!</button><button class="btn" ${A({ k: "skip", w: s.di })}>⏭ Skip</button></div>
+             <p class="muted" style="margin:0">Tap “They got it” when ${esc(ctx.names[other])} says it out loud.</p>`
+          : `<p class="msg-line">Watch ${nm(ctx, s.actor)} act it out and shout your guess! 🗣️</p>
+             <form data-form="guess" class="form-row"><input type="hidden" name="w" value="${s.di}"><input name="text" id="ch-guess" maxlength="40" placeholder="…or type your guess" autocomplete="off"><button class="btn primary">Guess</button></form>`}
+          ${guesses}</div>`,
+      };
+    },
+    after(root, s, ctx) {
+      root._ch = { s, ctx };
+      if (s.phase !== "act") { clearInterval(root._chTimer); root._chTurn = undefined; return; }
+      // A typed correct guess: the actor's screen confirms it, so the word only ever advances from one place.
+      const last = s.guesses[s.guesses.length - 1];
+      if (s.actor === ctx.me && last && last.ok && last.w === s.di) ctx.act({ k: "got", w: s.di });
+      if (root._chTurn === s.turn) return;
+      // Each screen counts down on its own from when the turn started there.
+      root._chTurn = s.turn;
+      clearInterval(root._chTimer);
+      const end = performance.now() + CH_SECS * 1000, turn = s.turn;
+      let sent = false;
+      const tick = () => {
+        const left = Math.max(0, Math.ceil((end - performance.now()) / 1000));
+        const el = root.querySelector(`[data-ch-turn="${turn}"]`);
+        if (el) { el.textContent = left; el.classList.toggle("low", left <= 10); }
+        if (left === 0) {
+          clearInterval(root._chTimer);
+          const cur = root._ch;
+          if (!sent && cur.s.turn === turn && cur.s.actor === cur.ctx.me) { sent = true; cur.ctx.act({ k: "timeup", turn }); }
+        }
+      };
+      root._chTimer = setInterval(tick, 250);
+      tick();
+    },
+  };
+
   window.Games = {
-    list: [ticTacToe, connectFour, battleship, dots, rps, reaction, memory, slide, wordDuel, drawGuess, hangman, emojiRiddles,
+    list: [ticTacToe, connectFour, battleship, dots, rps, reaction, memory, slide, wordDuel, drawGuess, charades, hangman, emojiRiddles,
       trivia, wyr, knowMe, truthOrDare, neverHave],
     rng,
     esc,
