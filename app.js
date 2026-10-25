@@ -232,6 +232,35 @@
     if (audio.ctx && audio.ctx.state !== "running") audio.ctx.resume().catch(() => {});
   });
 
+  // ---------- bigger video ----------
+  function setBig(on) {
+    document.body.classList.toggle("big-video", on);
+    $("#btn-big").textContent = on ? "⤡" : "⤢";
+    $("#btn-big").title = on ? "Make video smaller" : "Enlarge video";
+    try { localStorage.setItem("ustwo-big", on ? "1" : "0"); } catch (e) { /* ignore */ }
+  }
+  $("#btn-big").addEventListener("click", () => setBig(!document.body.classList.contains("big-video")));
+  try { setBig(localStorage.getItem("ustwo-big") === "1"); } catch (e) { /* storage blocked */ }
+
+  const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+  function videoOnlyFullscreen() {
+    // iPhones can't make a page section full screen, only a video
+    const v = $("#remote-video");
+    if (!v.srcObject) return toast("Your partner's video isn't on yet");
+    if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();
+    else toast("Full screen isn't available here — try ⤢ to enlarge instead");
+  }
+  $("#btn-full").addEventListener("click", () => {
+    if (fsElement()) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+    const box = $(".videos");
+    if (box.requestFullscreen) box.requestFullscreen().catch(videoOnlyFullscreen);
+    else if (box.webkitRequestFullscreen) box.webkitRequestFullscreen();
+    else videoOnlyFullscreen();
+  });
+  const syncFsButton = () => { $("#btn-full").textContent = fsElement() ? "✕" : "⛶"; };
+  document.addEventListener("fullscreenchange", syncFsButton);
+  document.addEventListener("webkitfullscreenchange", syncFsButton);
+
   // ---------- speaker volume ----------
   // iPhone Safari ignores <video>.volume, so the partner's audio goes through a Web Audio gain node.
   // The video element stays attached (muted) because Chrome won't play a remote WebRTC stream through Web Audio otherwise.
