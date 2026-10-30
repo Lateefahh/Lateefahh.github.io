@@ -1365,80 +1365,172 @@
     },
   };
 
-  // ---------- 19. Picture Puzzle (together, on one shared board) ----------
+  // ---------- 19. Jigsaw Puzzle (together, drag pieces from the pile onto the board) ----------
   const PICS = [{ src: "img/penguins.jpg", w: 1200, h: 686 }];
-  const PZ_SIZES = [3, 4, 5];
-  let pzSel = null; // tile you've tapped first (only on your screen; swaps are what get shared)
-  function pzScramble(n, rand) {
-    let b;
-    do b = shuffle(range(n * n), rand); while (b.some((t, i) => t === i)); // no piece starts in its right spot
-    return b;
+  const JIG_SIZES = [{ c: 4, r: 3, label: "12 pieces" }, { c: 5, r: 4, label: "20 pieces" }, { c: 7, r: 5, label: "35 pieces" }];
+  const JW = 1000; // the board is 1000 units wide; everything is drawn in these units and the SVG scales to the screen
+  // One knob: [along the edge, out from the edge] in units of the piece's smaller side, centred on the edge.
+  const KNOB = [[0.36, 0], [0.42, 0], [0.43, 0.06], [0.40, 0.10], [0.34, 0.18], [0.40, 0.26], [0.50, 0.26],
+    [0.60, 0.26], [0.66, 0.18], [0.60, 0.10], [0.57, 0.06], [0.58, 0], [0.64, 0]];
+  const r1 = (v) => Math.round(v * 10) / 10;
+  function jigGeom(s) {
+    const pic = PICS[s.pic], BH = Math.round(JW * pic.h / pic.w);
+    const pw = JW / s.cols, ph = BH / s.rows, m = Math.min(pw, ph);
+    const trayY = BH + 0.45 * m;
+    return { pic, BH, pw, ph, m, trayY, TH: trayY + BH, pad: 0.3 * m };
   }
-  const pzPoints = (s) => [0, 1].map((p) => s.score[p] + (s.last === p ? 1 : 0));
+  // t: 0 flat, 1 knob sticks out of this piece, -1 hole
+  function jigEdge(x0, y0, x1, y1, t, m) {
+    if (!t) return `L${r1(x1)},${r1(y1)}`;
+    const L = Math.hypot(x1 - x0, y1 - y0), ux = (x1 - x0) / L, uy = (y1 - y0) / L, nx = uy, ny = -ux;
+    const P = ([u, v]) => { const a = L / 2 + (u - 0.5) * m, b = v * m * t; return `${r1(x0 + ux * a + nx * b)},${r1(y0 + uy * a + ny * b)}`; };
+    const p = KNOB.map(P);
+    return `L${p[0]}C${p[1]} ${p[2]} ${p[3]}C${p[4]} ${p[5]} ${p[6]}C${p[7]} ${p[8]} ${p[9]}C${p[10]} ${p[11]} ${p[12]}L${r1(x1)},${r1(y1)}`;
+  }
+  function jigPath(s, i, g) {
+    const c = i % s.cols, r = Math.floor(i / s.cols);
+    const top = r === 0 ? 0 : -s.h[(r - 1) * s.cols + c], bottom = r === s.rows - 1 ? 0 : s.h[r * s.cols + c];
+    const left = c === 0 ? 0 : -s.v[r * (s.cols - 1) + c - 1], right = c === s.cols - 1 ? 0 : s.v[r * (s.cols - 1) + c];
+    return "M0,0" + jigEdge(0, 0, g.pw, 0, top, g.m) + jigEdge(g.pw, 0, g.pw, g.ph, right, g.m)
+      + jigEdge(g.pw, g.ph, 0, g.ph, bottom, g.m) + jigEdge(0, g.ph, 0, 0, left, g.m) + "Z";
+  }
+  function jigNew(rand, size) {
+    const { c: cols, r: rows } = JIG_SIZES[size], N = cols * rows;
+    const s = { pic: 0, size, cols, rows, h: range((rows - 1) * cols).map(() => (rand() < 0.5 ? 1 : -1)), v: range(rows * (cols - 1)).map(() => (rand() < 0.5 ? 1 : -1)) };
+    const g = jigGeom(s);
+    // scatter the pieces over the pile under the board: one loose spot each, shuffled and jiggled
+    const spots = shuffle(range(N), rand);
+    s.pos = range(N).map((i) => {
+      const k = spots[i], jx = (rand() - 0.5) * 0.5 * g.m, jy = (rand() - 0.5) * 0.5 * g.m;
+      return [r1(Math.max(0, Math.min(JW - g.pw, (k % cols) * g.pw + jx))), r1(Math.max(g.trayY, Math.min(g.TH - g.ph, g.trayY + Math.floor(k / cols) * g.ph + jy)))];
+    });
+    s.z = shuffle(range(N), rand);
+    return Object.assign(s, { zc: N, placed: Array(N).fill(null), score: [0, 0], last: null, done: false, moves: 0 });
+  }
+  let jigDrag = null; // the piece you're dragging right now (only on your screen)
   const picPuzzle = {
-    id: "pic", name: "Picture Puzzle", icon: "🐧", tag: "Puzzle", blurb: "Rebuild the penguin picture together. Most pieces placed wins!",
-    // Both players swap pieces on the same board, so the room creator's screen decides the order of moves.
+    id: "pic", name: "Jigsaw Puzzle", icon: "🧩", tag: "Puzzle", blurb: "Drag the scattered pieces into place together. Most pieces placed wins!",
+    // Both players move pieces of the same puzzle at once, so the room creator's screen decides the order of moves.
     hostAuthority: true,
-    init: (rand) => ({ pic: 0, n: 3, board: pzScramble(3, rand), owner: Array(9).fill(null), score: [0, 0], last: null, done: false, moves: 0, wins: [0, 0], round: 0 }),
+    init: (rand) => Object.assign(jigNew(rand, 0), { wins: [0, 0], round: 0 }),
     apply(s, a, p, rand) {
-      if (a.k === "swap") {
-        const i = s.board.indexOf(a.t1), j = s.board.indexOf(a.t2);
-        if (s.done || i < 0 || j < 0 || i === j || s.board[i] === i || s.board[j] === j) return false;
-        [s.board[i], s.board[j]] = [s.board[j], s.board[i]];
+      if (a.k === "move") {
+        const i = a.i, N = s.cols * s.rows, x = +a.x, y = +a.y;
+        if (s.done || !(i >= 0 && i < N) || s.placed[i] !== null || !isFinite(x) || !isFinite(y)) return false;
+        const g = jigGeom(s), cx = r1((i % s.cols) * g.pw), cy = r1(Math.floor(i / s.cols) * g.ph);
         s.moves++;
-        for (const k of [i, j]) if (s.board[k] === k) { s.owner[k] = p; s.score[p]++; }
-        if (s.board.every((t, k) => t === k)) {
-          s.done = true; s.last = p;
-          const [x, y] = pzPoints(s);
-          if (x !== y) s.wins[x > y ? 0 : 1]++;
+        s.z[i] = ++s.zc;
+        if (Math.hypot(x - cx, y - cy) < g.m * 0.3) {
+          s.pos[i] = [cx, cy]; s.placed[i] = p; s.score[p]++;
+          if (!s.placed.includes(null)) {
+            s.done = true; s.last = p;
+            const pts = [0, 1].map((q) => s.score[q] + (s.last === q ? 1 : 0));
+            if (pts[0] !== pts[1]) s.wins[pts[0] > pts[1] ? 0 : 1]++;
+          }
+        } else {
+          s.pos[i] = [r1(Math.max(-g.pad, Math.min(JW - g.pw + g.pad, x))), r1(Math.max(-g.pad, Math.min(g.TH - g.ph + g.pad, y)))];
         }
       } else if (a.k === "size") {
-        if (a.round !== s.round || !PZ_SIZES.includes(a.n) || !(s.done || s.moves === 0)) return false;
-        Object.assign(s, { n: a.n, board: pzScramble(a.n, rand), owner: Array(a.n * a.n).fill(null), score: [0, 0], last: null, done: false, moves: 0, round: s.round + 1 });
+        if (a.round !== s.round || !JIG_SIZES[a.size] || !(s.done || s.moves === 0)) return false;
+        Object.assign(s, jigNew(rand, a.size), { round: s.round + 1 });
       } else return false;
     },
     render(s, ctx) {
-      const pic = PICS[s.pic], n = s.n;
-      const look = (t) => `background-image:url(${pic.src});background-size:${n * 100}% ${n * 100}%;background-position:${(t % n) / (n - 1) * 100}% ${Math.floor(t / n) / (n - 1) * 100}%`;
-      const board = `<div class="pz ${s.done ? "solved" : ""}" style="grid-template-columns:repeat(${n},1fr);grid-template-rows:repeat(${n},1fr);aspect-ratio:${pic.w}/${pic.h}">${s.board.map((t, k) => {
-        const locked = t === k;
-        return `<button class="pz-tile ${locked ? "ok p" + s.owner[k] : ""} ${pzSel === t ? "sel" : ""}" data-tile="${t}" style="${look(t)}" ${locked || s.done ? "disabled" : ""} aria-label="piece"></button>`;
-      }).join("")}</div>`;
-      const [x, y] = pzPoints(s);
-      const total = n * n, placed = s.score[0] + s.score[1];
+      const g = jigGeom(s), N = s.cols * s.rows;
+      const pts = [0, 1].map((q) => s.score[q] + (s.last === q ? 1 : 0));
+      const placed = s.placed.filter((x) => x !== null).length;
       const msg = s.done
-        ? (x === y ? `Picture complete! It's a tie 🤝` : `Picture complete! ${who(ctx, x > y ? 0 : 1)} placed the most pieces 🏆`)
-        : `Tap a piece, then tap where it should go. Pieces in the right spot lock in your color!`;
+        ? (pts[0] === pts[1] ? "Puzzle complete! It's a tie 🤝" : `Puzzle complete! ${who(ctx, pts[0] > pts[1] ? 0 : 1)} placed the most pieces 🏆`)
+        : "Drag pieces from the pile onto the board — they click in when they're close to the right spot.";
       const sizes = s.done || s.moves === 0
-        ? `<div class="row">${PZ_SIZES.map((m) => `<button class="btn ${m === n && !s.done ? "primary" : ""} small" ${A({ k: "size", n: m, round: s.round })}>${m}×${m}${m === 3 ? " easy" : m === 4 ? " medium" : " hard"}</button>`).join("")}</div>
+        ? `<div class="row">${JIG_SIZES.map((z, k) => `<button class="btn small ${k === s.size && !s.done ? "primary" : ""}" ${A({ k: "size", size: k, round: s.round })}>${z.label}</button>`).join("")}</div>
            ${s.done ? `<p class="muted" style="margin:0">Pick a size for the next puzzle</p>` : ""}` : "";
-      return `<div class="g">${scores(ctx, [x, y])}
-        <span class="badge">Pieces placed ${placed}/${total}${s.last !== null ? ` · 🏁 last piece +1: ${esc(ctx.names[s.last])}` : " · 🏁 last piece = +1 bonus"} · Puzzles won — ${esc(ctx.names[0])}: ${s.wins[0]} · ${esc(ctx.names[1])}: ${s.wins[1]}</span>
-        <p class="msg-line ${s.done ? "win" : ""}">${msg}</p>
-        <div class="boards"><div class="board-col">${board}</div>
-          ${s.done ? "" : `<div class="board-col"><span class="muted">Goal</span><img class="pz-goal" src="${pic.src}" alt="The finished picture"></div>`}</div>
-        ${sizes}</div>`;
+      // The board's markup only changes per round, so a piece you're holding is never redrawn under your finger;
+      // piece positions are applied in after().
+      const pieces = range(N).map((i) => {
+        const c = i % s.cols, r = Math.floor(i / s.cols), d = jigPath(s, i, g);
+        return `<g class="jp" data-p="${i}"><image href="${g.pic.src}" x="${r1(-c * g.pw)}" y="${r1(-r * g.ph)}" width="${JW}" height="${g.BH}" preserveAspectRatio="none" clip-path="url(#jc${s.round}-${i})"/><path class="jp-edge" d="${d}"/></g>`;
+      }).join("");
+      const defs = range(N).map((i) => `<clipPath id="jc${s.round}-${i}"><path d="${jigPath(s, i, g)}"/></clipPath>`).join("");
+      return {
+        head: `<div class="g">${scores(ctx, pts)}
+          <span class="badge">Pieces placed ${placed}/${N} · 🏁 last piece ${s.last !== null ? `+1: ${esc(ctx.names[s.last])}` : "= +1 bonus"} · Puzzles won — ${esc(ctx.names[0])}: ${s.wins[0]} · ${esc(ctx.names[1])}: ${s.wins[1]}</span>
+          <p class="msg-line ${s.done ? "win" : ""}">${msg}</p></div>`,
+        board: `<svg class="jig" viewBox="${r1(-g.pad)} ${r1(-g.pad)} ${r1(JW + 2 * g.pad)} ${r1(g.TH + 2 * g.pad)}" data-round="${s.round}">
+          <defs>${defs}</defs>
+          <rect class="jig-tray" x="${r1(-g.pad)}" y="${r1(g.trayY - g.pad / 2)}" width="${r1(JW + 2 * g.pad)}" height="${r1(g.TH - g.trayY + 1.5 * g.pad)}" rx="18"/>
+          <rect class="jig-board" x="0" y="0" width="${JW}" height="${g.BH}"/>
+          <image class="jig-ghost" href="${g.pic.src}" x="0" y="0" width="${JW}" height="${g.BH}" preserveAspectRatio="none"/>
+          <g class="jp-layer">${pieces}</g></svg>`,
+        foot: `<div class="g" style="margin-top:10px">${sizes}</div>`,
+      };
     },
     after(root, s, ctx) {
-      root._pz = { s, ctx };
-      if (root._pzRound !== s.round) { root._pzRound = s.round; pzSel = null; }
-      if (pzSel !== null && s.board[s.board.indexOf(pzSel)] === s.board.indexOf(pzSel)) pzSel = null; // partner locked it in
-      if (root._pzBound) return;
-      root._pzBound = true;
-      root.addEventListener("click", (e) => {
-        const b = e.target.closest("[data-tile]");
-        if (!b || b.disabled) return;
-        const t = +b.dataset.tile, cur = root._pz;
-        if (pzSel === null || pzSel === t) {
-          pzSel = pzSel === t ? null : t;
-          root.querySelectorAll(".pz-tile").forEach((x) => x.classList.toggle("sel", +x.dataset.tile === pzSel));
-        } else {
-          const t1 = pzSel;
-          pzSel = null;
-          root.querySelectorAll(".pz-tile.sel").forEach((x) => x.classList.remove("sel"));
-          cur.ctx.act({ k: "swap", t1, t2: t });
-        }
+      root._jig = { s, ctx };
+      const svg = root.querySelector("svg.jig");
+      if (!svg) return;
+      const layer = svg.querySelector(".jp-layer"), els = [...layer.children];
+      const byIdx = []; els.forEach((el) => (byIdx[+el.dataset.p] = el));
+      if (svg._round !== s.round) { svg._round = s.round; svg._placed = s.placed.slice(); jigDrag = null; }
+      const held = jigDrag && jigDrag.el;
+      byIdx.forEach((el, i) => {
+        if (el === held && s.placed[i] === null) return;
+        el.setAttribute("transform", `translate(${s.pos[i][0]},${s.pos[i][1]})`);
+        el.classList.toggle("placed", s.placed[i] !== null);
+        if (s.placed[i] !== null && svg._placed[i] === null) { el.classList.add("snap"); setTimeout(() => el.classList.remove("snap"), 700); }
       });
+      svg._placed = s.placed.slice();
+      if (held && s.placed[+held.dataset.p] !== null) { held.classList.remove("drag"); jigDrag = null; } // partner placed it first
+      // stacking: placed pieces underneath, then most recently moved on top; the held piece stays on top
+      const order = byIdx.map((_, i) => i).sort((a, b) => (s.placed[a] !== null ? -1e9 + a : s.z[a]) - (s.placed[b] !== null ? -1e9 + b : s.z[b]));
+      order.forEach((i) => { if (byIdx[i] !== (jigDrag && jigDrag.el)) layer.appendChild(byIdx[i]); });
+      if (jigDrag) layer.appendChild(jigDrag.el);
+
+      if (svg._bound) return;
+      svg._bound = true;
+      const toSvg = (e) => { const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); };
+      const at = (el) => { const m = /translate\(([-\d.]+),([-\d.]+)\)/.exec(el.getAttribute("transform") || ""); return m ? [+m[1], +m[2]] : [0, 0]; };
+      let lastSig = 0;
+      svg.addEventListener("touchstart", (e) => { if (e.target.closest(".jp:not(.placed)")) e.preventDefault(); }, { passive: false });
+      svg.addEventListener("pointerdown", (e) => {
+        const el = e.target.closest(".jp");
+        const cur = root._jig;
+        if (!el || el.classList.contains("placed") || cur.s.done || jigDrag) return;
+        e.preventDefault();
+        try { svg.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+        const pt = toSvg(e), [x, y] = at(el);
+        jigDrag = { el, i: +el.dataset.p, dx: pt.x - x, dy: pt.y - y, x, y, id: e.pointerId };
+        el.classList.add("drag");
+        layer.appendChild(el);
+      });
+      svg.addEventListener("pointermove", (e) => {
+        if (!jigDrag || e.pointerId !== jigDrag.id) return;
+        const pt = toSvg(e), g = jigGeom(root._jig.s);
+        jigDrag.x = r1(Math.max(-g.pad, Math.min(JW - g.pw + g.pad, pt.x - jigDrag.dx)));
+        jigDrag.y = r1(Math.max(-g.pad, Math.min(g.TH - g.ph + g.pad, pt.y - jigDrag.dy)));
+        jigDrag.el.setAttribute("transform", `translate(${jigDrag.x},${jigDrag.y})`);
+        const now = performance.now();
+        if (now - lastSig > 70) { lastSig = now; root._jig.ctx.signal({ i: jigDrag.i, x: jigDrag.x, y: jigDrag.y }); }
+      });
+      const drop = (e) => {
+        if (!jigDrag || e.pointerId !== jigDrag.id) return;
+        const d = jigDrag;
+        jigDrag = null;
+        d.el.classList.remove("drag");
+        root._jig.ctx.act({ k: "move", i: d.i, x: d.x, y: d.y });
+      };
+      svg.addEventListener("pointerup", drop);
+      svg.addEventListener("pointercancel", drop);
+    },
+    // live position of a piece your partner is dragging (not saved; their drop is what counts)
+    onSignal(root, d) {
+      const el = root.querySelector(`svg.jig .jp[data-p="${+d.i}"]`);
+      if (!el || el.classList.contains("placed") || (jigDrag && jigDrag.el === el)) return;
+      el.setAttribute("transform", `translate(${+d.x},${+d.y})`);
+      el.classList.add("remote");
+      if (!jigDrag) el.parentNode.appendChild(el);
+      clearTimeout(el._rt);
+      el._rt = setTimeout(() => el.classList.remove("remote"), 400);
     },
   };
 

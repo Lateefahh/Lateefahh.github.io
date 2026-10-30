@@ -31,7 +31,7 @@ There's also a chat box and a ❤️ button that sends floating hearts.
 | 🙈 | Never Have I Ever | Answer secretly, reveal together |
 | 🎬 | Emoji Riddles | Guess the movie or phrase from emojis |
 | 🎭 | Charades | Act out the word on camera — 60 seconds per turn |
-| 🐧 | Picture Puzzle | Rebuild a photo together — most pieces placed wins |
+| 🧩 | Jigsaw Puzzle | Drag scattered jigsaw pieces into place together — most pieces placed wins |
 
 ## Putting it online (free, GitHub Pages)
 1. In this repo on GitHub go to **Settings → Pages**.

@@ -219,6 +219,11 @@
         // p is set when the host relays a move in a host-ordered game (it may be our own move coming back)
         if (m.id === st.gameId && st.gs) applyAction(m.a, m.p === 0 || m.p === 1 ? m.p : other());
         break;
+      case "sig": {
+        const g = gameById(st.gameId);
+        if (m.id === st.gameId && g && g.onSignal && m.d) g.onSignal(stage, m.d, ctx());
+        break;
+      }
       case "req":
         // the guest's move in a host-ordered game: apply it in our order, then tell both screens
         if (st.host && m.id === st.gameId && st.gs && applyAction(m.a, other())) send({ t: "act", id: st.gameId, a: m.a, p: other() });
@@ -432,7 +437,9 @@
   // ---------- games ----------
   const gameById = (id) => GAMES.find((g) => g.id === id);
   const stage = $("#stage-body");
-  const ctx = () => ({ me: st.me, names: st.names.map((n, i) => n || (i === st.me ? "You" : "Partner")), act });
+  const ctx = () => ({ me: st.me, names: st.names.map((n, i) => n || (i === st.me ? "You" : "Partner")), act, signal });
+  // a passing update that isn't part of the game state (e.g. a puzzle piece being dragged live)
+  function signal(d) { send({ t: "sig", id: st.gameId, d }); }
 
   function selectGame(id) {
     if (id && !connected()) toast("Your partner isn't here yet — the game will be waiting for them 💌");
@@ -481,7 +488,7 @@
     clearTimeout(stage._rxTimer);
     clearInterval(stage._chTimer);
     stage.innerHTML = "";
-    Object.assign(stage, { _menu: null, _drawBound: false, _memSeq: undefined, _rxRound: undefined, _rxGo: 0, _chTurn: undefined, _pzBound: false, _pzRound: undefined });
+    Object.assign(stage, { _menu: null, _drawBound: false, _memSeq: undefined, _rxRound: undefined, _rxGo: 0, _chTurn: undefined, _jig: undefined });
   }
 
   function paint() {
