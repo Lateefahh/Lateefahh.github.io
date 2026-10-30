@@ -234,7 +234,7 @@
     return b;
   }
   const slide = {
-    id: "slide", name: "Sliding Puzzle Race", icon: "🧩", tag: "Puzzle", blurb: "Same scrambled puzzle for both — who solves it first?",
+    id: "slide", name: "Sliding Puzzle Race", icon: "🔢", tag: "Puzzle", blurb: "Same scrambled puzzle for both — who solves it first?",
     init: (rand) => { const b = scramble(rand); return { boards: [b.slice(), b.slice()], moves: [0, 0], winner: null, wins: [0, 0], round: 0 }; },
     apply(s, a, p, rand) {
       if (a.k === "move") {
@@ -1409,7 +1409,7 @@
   }
   let jigDrag = null; // the piece you're dragging right now (only on your screen)
   const picPuzzle = {
-    id: "pic", name: "Jigsaw Puzzle", icon: "🧩", tag: "Puzzle", blurb: "Drag the scattered pieces into place together. Most pieces placed wins!",
+    id: "pic", name: "Jigsaw Puzzle", icon: "🧩", tag: "New · Puzzle", blurb: "Drag the scattered pieces into place together. Most pieces placed wins!",
     // Both players move pieces of the same puzzle at once, so the room creator's screen decides the order of moves.
     hostAuthority: true,
     init: (rand) => Object.assign(jigNew(rand, 0), { wins: [0, 0], round: 0 }),
@@ -1535,7 +1535,7 @@
   };
 
   window.Games = {
-    list: [ticTacToe, connectFour, battleship, dots, rps, reaction, memory, slide, picPuzzle, wordDuel, drawGuess, charades, hangman, emojiRiddles,
+    list: [picPuzzle, ticTacToe, connectFour, battleship, dots, rps, reaction, memory, slide, wordDuel, drawGuess, charades, hangman, emojiRiddles,
       trivia, wyr, knowMe, truthOrDare, neverHave],
     rng,
     esc,
