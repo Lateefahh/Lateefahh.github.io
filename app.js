@@ -161,8 +161,16 @@
   // ---------- data connection ----------
   function setupConn(conn) {
     conn.on("open", () => {
-      st.conn = conn; st.retries = 0;
-      conn.send({ t: "hello", name: st.names[st.me] });
+      st.conn = conn; st.retries = 0; st.gotHello = false;
+      // Swap names; keep re-sending until the other side's hello arrives (a message sent the instant
+      // the channel opens can occasionally go missing).
+      let tries = 0;
+      const hello = () => {
+        if (st.conn !== conn || st.gotHello || tries++ > 6) return;
+        conn.send({ t: "hello", name: st.names[st.me] });
+        setTimeout(hello, 1500);
+      };
+      hello();
       setConnUI(true);
     });
     conn.on("data", onData);
@@ -181,13 +189,20 @@
   function onData(m) {
     if (!m || typeof m !== "object") return;
     switch (m.t) {
-      case "hello":
+      case "hello": {
+        const first = !st.gotHello;
+        st.gotHello = true;
         st.names[other()] = String(m.name || "Partner").slice(0, 20);
         $("#remote-name").textContent = st.names[other()];
-        sys(`${st.names[other()]} joined 💖`);
-        if (st.host) send({ t: "sync", id: st.gameId, gs: st.gs });
+        setConnUI(true);
+        if (!m.ack) send({ t: "hello", name: st.names[st.me], ack: true }); // so they know we're here too
+        if (first) {
+          sys(`${st.names[other()]} joined 💖`);
+          if (st.host) send({ t: "sync", id: st.gameId, gs: st.gs });
+        }
         paint();
         break;
+      }
       case "full":
         lobbyStatus("That room already has two people in it.");
         toast("That room already has two people in it.");
@@ -201,7 +216,12 @@
         applySelect(m.id, m.r, m.carry);
         break;
       case "act":
-        if (m.id === st.gameId && st.gs) applyAction(m.a, other());
+        // p is set when the host relays a move in a host-ordered game (it may be our own move coming back)
+        if (m.id === st.gameId && st.gs) applyAction(m.a, m.p === 0 || m.p === 1 ? m.p : other());
+        break;
+      case "req":
+        // the guest's move in a host-ordered game: apply it in our order, then tell both screens
+        if (st.host && m.id === st.gameId && st.gs && applyAction(m.a, other())) send({ t: "act", id: st.gameId, a: m.a, p: other() });
         break;
       case "chat":
         chatLine(String(m.text).slice(0, 200), false);
@@ -443,6 +463,8 @@
     if (!st.gs) return;
     if (!connected()) { toast("Wait for your partner to join first 💕"); return; }
     a = Object.assign({}, a, { r: rand32() });
+    // In games where both players move on the same thing at once, the host's screen sets the order of moves.
+    if (gameById(st.gameId).hostAuthority && !st.host) { send({ t: "req", id: st.gameId, a }); return; }
     if (applyAction(a, st.me)) send({ t: "act", id: st.gameId, a });
   }
   function applyAction(a, p) {
@@ -459,7 +481,7 @@
     clearTimeout(stage._rxTimer);
     clearInterval(stage._chTimer);
     stage.innerHTML = "";
-    Object.assign(stage, { _menu: null, _drawBound: false, _memSeq: undefined, _rxRound: undefined, _rxGo: 0, _chTurn: undefined });
+    Object.assign(stage, { _menu: null, _drawBound: false, _memSeq: undefined, _rxRound: undefined, _rxGo: 0, _chTurn: undefined, _pzBound: false, _pzRound: undefined });
   }
 
   function paint() {

@@ -1365,8 +1365,85 @@
     },
   };
 
+  // ---------- 19. Picture Puzzle (together, on one shared board) ----------
+  const PICS = [{ src: "img/penguins.jpg", w: 1200, h: 686 }];
+  const PZ_SIZES = [3, 4, 5];
+  let pzSel = null; // tile you've tapped first (only on your screen; swaps are what get shared)
+  function pzScramble(n, rand) {
+    let b;
+    do b = shuffle(range(n * n), rand); while (b.some((t, i) => t === i)); // no piece starts in its right spot
+    return b;
+  }
+  const pzPoints = (s) => [0, 1].map((p) => s.score[p] + (s.last === p ? 1 : 0));
+  const picPuzzle = {
+    id: "pic", name: "Picture Puzzle", icon: "🐧", tag: "Puzzle", blurb: "Rebuild the penguin picture together. Most pieces placed wins!",
+    // Both players swap pieces on the same board, so the room creator's screen decides the order of moves.
+    hostAuthority: true,
+    init: (rand) => ({ pic: 0, n: 3, board: pzScramble(3, rand), owner: Array(9).fill(null), score: [0, 0], last: null, done: false, moves: 0, wins: [0, 0], round: 0 }),
+    apply(s, a, p, rand) {
+      if (a.k === "swap") {
+        const i = s.board.indexOf(a.t1), j = s.board.indexOf(a.t2);
+        if (s.done || i < 0 || j < 0 || i === j || s.board[i] === i || s.board[j] === j) return false;
+        [s.board[i], s.board[j]] = [s.board[j], s.board[i]];
+        s.moves++;
+        for (const k of [i, j]) if (s.board[k] === k) { s.owner[k] = p; s.score[p]++; }
+        if (s.board.every((t, k) => t === k)) {
+          s.done = true; s.last = p;
+          const [x, y] = pzPoints(s);
+          if (x !== y) s.wins[x > y ? 0 : 1]++;
+        }
+      } else if (a.k === "size") {
+        if (a.round !== s.round || !PZ_SIZES.includes(a.n) || !(s.done || s.moves === 0)) return false;
+        Object.assign(s, { n: a.n, board: pzScramble(a.n, rand), owner: Array(a.n * a.n).fill(null), score: [0, 0], last: null, done: false, moves: 0, round: s.round + 1 });
+      } else return false;
+    },
+    render(s, ctx) {
+      const pic = PICS[s.pic], n = s.n;
+      const look = (t) => `background-image:url(${pic.src});background-size:${n * 100}% ${n * 100}%;background-position:${(t % n) / (n - 1) * 100}% ${Math.floor(t / n) / (n - 1) * 100}%`;
+      const board = `<div class="pz ${s.done ? "solved" : ""}" style="grid-template-columns:repeat(${n},1fr);grid-template-rows:repeat(${n},1fr);aspect-ratio:${pic.w}/${pic.h}">${s.board.map((t, k) => {
+        const locked = t === k;
+        return `<button class="pz-tile ${locked ? "ok p" + s.owner[k] : ""} ${pzSel === t ? "sel" : ""}" data-tile="${t}" style="${look(t)}" ${locked || s.done ? "disabled" : ""} aria-label="piece"></button>`;
+      }).join("")}</div>`;
+      const [x, y] = pzPoints(s);
+      const total = n * n, placed = s.score[0] + s.score[1];
+      const msg = s.done
+        ? (x === y ? `Picture complete! It's a tie 🤝` : `Picture complete! ${who(ctx, x > y ? 0 : 1)} placed the most pieces 🏆`)
+        : `Tap a piece, then tap where it should go. Pieces in the right spot lock in your color!`;
+      const sizes = s.done || s.moves === 0
+        ? `<div class="row">${PZ_SIZES.map((m) => `<button class="btn ${m === n && !s.done ? "primary" : ""} small" ${A({ k: "size", n: m, round: s.round })}>${m}×${m}${m === 3 ? " easy" : m === 4 ? " medium" : " hard"}</button>`).join("")}</div>
+           ${s.done ? `<p class="muted" style="margin:0">Pick a size for the next puzzle</p>` : ""}` : "";
+      return `<div class="g">${scores(ctx, [x, y])}
+        <span class="badge">Pieces placed ${placed}/${total}${s.last !== null ? ` · 🏁 last piece +1: ${esc(ctx.names[s.last])}` : " · 🏁 last piece = +1 bonus"} · Puzzles won — ${esc(ctx.names[0])}: ${s.wins[0]} · ${esc(ctx.names[1])}: ${s.wins[1]}</span>
+        <p class="msg-line ${s.done ? "win" : ""}">${msg}</p>
+        <div class="boards"><div class="board-col">${board}</div>
+          ${s.done ? "" : `<div class="board-col"><span class="muted">Goal</span><img class="pz-goal" src="${pic.src}" alt="The finished picture"></div>`}</div>
+        ${sizes}</div>`;
+    },
+    after(root, s, ctx) {
+      root._pz = { s, ctx };
+      if (root._pzRound !== s.round) { root._pzRound = s.round; pzSel = null; }
+      if (pzSel !== null && s.board[s.board.indexOf(pzSel)] === s.board.indexOf(pzSel)) pzSel = null; // partner locked it in
+      if (root._pzBound) return;
+      root._pzBound = true;
+      root.addEventListener("click", (e) => {
+        const b = e.target.closest("[data-tile]");
+        if (!b || b.disabled) return;
+        const t = +b.dataset.tile, cur = root._pz;
+        if (pzSel === null || pzSel === t) {
+          pzSel = pzSel === t ? null : t;
+          root.querySelectorAll(".pz-tile").forEach((x) => x.classList.toggle("sel", +x.dataset.tile === pzSel));
+        } else {
+          const t1 = pzSel;
+          pzSel = null;
+          root.querySelectorAll(".pz-tile.sel").forEach((x) => x.classList.remove("sel"));
+          cur.ctx.act({ k: "swap", t1, t2: t });
+        }
+      });
+    },
+  };
+
   window.Games = {
-    list: [ticTacToe, connectFour, battleship, dots, rps, reaction, memory, slide, wordDuel, drawGuess, charades, hangman, emojiRiddles,
+    list: [ticTacToe, connectFour, battleship, dots, rps, reaction, memory, slide, picPuzzle, wordDuel, drawGuess, charades, hangman, emojiRiddles,
       trivia, wyr, knowMe, truthOrDare, neverHave],
     rng,
     esc,

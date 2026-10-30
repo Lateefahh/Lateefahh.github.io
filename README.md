@@ -10,7 +10,7 @@ A little website for two people to video call **and** play games together at the
 
 There's also a chat box and a ❤️ button that sends floating hearts.
 
-## The 18 games
+## The 19 games
 | | Game | How it works |
 |---|---|---|
 | ❌ | Tic-Tac-Toe | Take turns, three in a row wins |
@@ -31,6 +31,7 @@ There's also a chat box and a ❤️ button that sends floating hearts.
 | 🙈 | Never Have I Ever | Answer secretly, reveal together |
 | 🎬 | Emoji Riddles | Guess the movie or phrase from emojis |
 | 🎭 | Charades | Act out the word on camera — 60 seconds per turn |
+| 🐧 | Picture Puzzle | Rebuild a photo together — most pieces placed wins |
 
 ## Putting it online (free, GitHub Pages)
 1. In this repo on GitHub go to **Settings → Pages**.
